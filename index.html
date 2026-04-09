@@ -932,14 +932,14 @@ function showMapInfoPanel(r, latlng) {
   const species = r.Species_rep || 'Unknown';
   const taxon   = [r.Class, r.Order, r.Family].filter(Boolean).join(' · ');
   const density = (r.Density && r.Density !== 'NA')
-    ? `${r.Density} ${r.Density_unit}`
+    ? `${r.Density} ${r.Density_unit.replace('km2', 'km²')}`
     : 'N/A';
 
   // Native removed; Density moved to the end (after Method)
   const fields = [
     ['Country', r.Country || '–'],
     ['Site',    r.Site    || '–'],
-    ['Year',    r.Year    || '–'],
+    ['Year(s)', r.Year    || '–'],
     ['Method',  r.Method  || '–'],
     ['Density', density, true],
   ];
@@ -1306,6 +1306,12 @@ function renderTable() {
           const v = r[col.key];
           if (!v || v === 'NA') return `<td><span style="color:var(--border)">–</span></td>`;
           return `<td title="${escHtml(v)}"><span class="sci-name">${escHtml(v)}</span></td>`;
+        }
+        if (col.key === 'Density_unit') {
+          const v = r[col.key];
+          if (!v || v === 'NA') return `<td><span style="color:var(--border)">–</span></td>`;
+          const disp = escHtml(v.replace('km2', 'km²'));
+          return `<td title="${disp}">${disp}</td>`;
         }
         const v = r[col.key];
         const disp = (!v || v === 'NA') ? '<span style="color:var(--border)">–</span>' : escHtml(v);
