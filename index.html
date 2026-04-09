@@ -1447,7 +1447,7 @@ function csvEscape(v) {
 function rowsToCsv(rows) {
   if (!rows.length) return '';
   const headers = Object.keys(rows[0]);
-  const headerLine = headers.join(',');
+  const headerLine = headers.map(csvEscape).join(',');
   const dataLines = rows.map(r => headers.map(h => csvEscape(r[h])).join(','));
   return [headerLine, ...dataLines].join('\n');
 }
