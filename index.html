@@ -1402,9 +1402,10 @@ function bindEvents() {
   // Map info panel – close button
   document.getElementById('mip-close').addEventListener('click', closeMapInfoPanel);
 
-  // Map info panel – close when clicking the map background (Leaflet map click
-  // only fires on background clicks, not on markers, so no extra guard needed)
-  state.map.on('click', closeMapInfoPanel);
+  // Map info panel – close when clicking the map background.
+  // With preferCanvas:true, marker clicks propagate to the map, so guard against
+  // them using e.propagatedFrom (set when the event originated from a layer).
+  state.map.on('click', (e) => { if (!e.propagatedFrom) closeMapInfoPanel(); });
 
   // Tab switching
   document.querySelectorAll('.tab').forEach(tab => {
