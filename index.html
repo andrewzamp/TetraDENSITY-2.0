@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TetraDENSITY 2.0 – Global Tetrapod Density Database</title>
+  <meta name="description" content="An interactive explorer for the TetraDENSITY 2.0 database of tetrapod population densities worldwide." />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #0f1923;
+      --bg2:      #162130;
+      --bg3:      #1e2e3e;
+      --border:   #2a3e52;
+      --text:     #dce9f5;
+      --muted:    #7a9bbf;
+      --accent:   #2ebcb3;
+      --accent2:  #f0883e;
+      --amphibia: #4ec96d;
+      --aves:     #5baff5;
+      --mammalia: #f07b3f;
+      --reptilia: #c97cf0;
+      --sidebar-w: 280px;
+      --header-h:  60px;
+      --radius:    8px;
+    }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; background: var(--bg); color: var(--text); }
+
+    /* ── Loading overlay ──────────────────────────────────────────── */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 16px;
+    }
+    #loading .logo { font-size: 2rem; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+    #loading .sub  { color: var(--muted); font-size: .9rem; }
+    .progress-bar  { width: 260px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width .3s ease; border-radius: 2px; }
+    #load-status   { color: var(--muted); font-size: .8rem; }
+
+    /* ── Layout ───────────────────────────────────────────────────── */
+    #app { display: none; flex-direction: column; height: 100vh; }
+    header {
+      height: var(--header-h); background: var(--bg2); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 16px; flex-shrink: 0;
+    }
+    header .brand { font-weight: 800; font-size: 1.15rem; color: var(--accent); letter-spacing: -.5px; white-space: nowrap; }
+    header .tagline { color: var(--muted); font-size: .8rem; flex: 1; }
+    header .gh-link {
+      color: var(--muted); text-decoration: none; font-size: .8rem;
+      border: 1px solid var(--border); padding: 4px 10px; border-radius: var(--radius);
+      transition: color .2s, border-color .2s;
+    }
+    header .gh-link:hover { color: var(--accent); border-color: var(--accent); }
+    #sidebar-toggle {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      cursor: pointer; border-radius: 6px; padding: 4px 8px; font-size: 1rem; display: none;
+    }
+
+    .body-row { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ──────────────────────────────────────────────────── */
+    #sidebar {
+      width: var(--sidebar-w); background: var(--bg2); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; padding: 16px;
+      gap: 16px;
+    }
+    #sidebar h3 { font-size: .7rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-group label { font-size: .8rem; color: var(--muted); }
+    input[type=text], select {
+      background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+      padding: 7px 10px; border-radius: var(--radius); font-size: .85rem; width: 100%;
+      outline: none; transition: border-color .2s;
+    }
+    input[type=text]:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--bg3); }
+    .class-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pill {
+      padding: 4px 10px; border-radius: 20px; border: 2px solid transparent;
+      cursor: pointer; font-size: .75rem; font-weight: 600; transition: opacity .2s, border-color .2s;
+    }
+    .pill.amphibia { background: #1a3d26; color: var(--amphibia); border-color: var(--amphibia); }
+    .pill.aves     { background: #1a2e40; color: var(--aves);     border-color: var(--aves); }
+    .pill.mammalia { background: #3d2515; color: var(--mammalia); border-color: var(--mammalia); }
+    .pill.reptilia { background: #2e1a3d; color: var(--reptilia); border-color: var(--reptilia); }
+    .pill.inactive { opacity: .35; }
+    .range-row { display: flex; gap: 8px; align-items: center; }
+    .range-row input[type=number] { flex: 1; }
+    .range-row span { color: var(--muted); }
+    #reset-btn {
+      margin-top: 4px; padding: 8px; background: var(--bg3); border: 1px solid var(--border);
+      color: var(--muted); border-radius: var(--radius); cursor: pointer; font-size: .82rem;
+      text-align: center; transition: border-color .2s, color .2s;
+    }
+    #reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .record-count { text-align: center; color: var(--muted); font-size: .78rem; padding-top: 4px; }
+    .record-count strong { color: var(--text); font-size: 1.1rem; display: block; }
+
+    /* ── Main content ─────────────────────────────────────────────── */
+    #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* stats bar */
+    #stats-bar {
+      display: flex; gap: 12px; padding: 12px 16px; background: var(--bg2);
+      border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto;
+    }
+    .stat-card {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 10px 16px; white-space: nowrap; min-width: 130px;
+    }
+    .stat-card .val { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+    .stat-card .lbl { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+    /* tabs */
+    #tab-bar {
+      display: flex; gap: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 0 16px; flex-shrink: 0;
+    }
+    .tab {
+      padding: 10px 18px; cursor: pointer; font-size: .85rem; color: var(--muted);
+      border-bottom: 2px solid transparent; transition: color .2s, border-color .2s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-panel { display: none; flex: 1; overflow: auto; }
+    .tab-panel.active { display: flex; flex-direction: column; }
+
+    /* ── Map tab ──────────────────────────────────────────────────── */
+    #map { flex: 1; }
+    .map-legend {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 10px 14px; font-size: .78rem; line-height: 1.9;
+    }
+    .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+    /* ── Charts tab ───────────────────────────────────────────────── */
+    #charts-panel { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; overflow-y: auto; }
+    .chart-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .chart-card h4 { font-size: .8rem; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+    .chart-card canvas { max-height: 250px; }
+
+    /* ── Table tab ────────────────────────────────────────────────── */
+    #table-panel { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+    .table-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .table-controls label { color: var(--muted); font-size: .8rem; }
+    .table-controls select { width: auto; }
+    .table-controls input { flex: 1; min-width: 180px; }
+    #col-toggle-area { display: flex; gap: 6px; flex-wrap: wrap; }
+    .col-badge {
+      padding: 3px 8px; border-radius: 12px; background: var(--bg3); border: 1px solid var(--border);
+      font-size: .72rem; cursor: pointer; color: var(--muted); transition: color .2s, border-color .2s;
+    }
+    .col-badge.on { color: var(--accent); border-color: var(--accent); }
+    .table-wrap { flex: 1; overflow: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    thead th {
+      background: var(--bg3); color: var(--muted); text-align: left; padding: 9px 12px;
+      position: sticky; top: 0; z-index: 2; white-space: nowrap; cursor: pointer;
+      user-select: none; border-bottom: 1px solid var(--border);
+    }
+    thead th:hover { color: var(--text); }
+    thead th .sort-icon { margin-left: 4px; opacity: .4; }
+    thead th.sort-asc .sort-icon::after  { content: '▲'; }
+    thead th.sort-desc .sort-icon::after { content: '▼'; }
+    thead th:not(.sort-asc):not(.sort-desc) .sort-icon::after { content: '⇅'; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:hover { background: var(--bg3); }
+    tbody td { padding: 7px 12px; white-space: nowrap; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+    .badge-class {
+      display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: .7rem; font-weight: 600;
+    }
+    .badge-Amphibia { background: #1a3d26; color: var(--amphibia); }
+    .badge-Aves     { background: #1a2e40; color: var(--aves); }
+    .badge-Mammalia { background: #3d2515; color: var(--mammalia); }
+    .badge-Reptilia { background: #2e1a3d; color: var(--reptilia); }
+    .pagination {
+      display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding-top: 4px;
+    }
+    .pagination button {
+      background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+      padding: 5px 10px; border-radius: var(--radius); cursor: pointer; font-size: .8rem;
+      transition: border-color .2s, color .2s;
+    }
+    .pagination button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .pagination button:disabled { opacity: .35; cursor: default; }
+    .pagination .page-info { color: var(--muted); font-size: .8rem; margin: 0 6px; }
+    .pagination .page-jump { width: 60px; }
+
+    /* ── References tab ───────────────────────────────────────────── */
+    #refs-panel { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .ref-item {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px 14px; display: flex; gap: 12px;
+    }
+    .ref-num { color: var(--accent); font-weight: 700; font-size: .85rem; white-space: nowrap; }
+    .ref-text { color: var(--text); font-size: .82rem; line-height: 1.5; }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      #charts-panel { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      #sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform .25s ease; }
+      #sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.5); }
+      #sidebar-toggle { display: block; }
+      header .tagline { display: none; }
+    }
+
+    /* ── Scrollbar ────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* ── Map note ─────────────────────────────────────────────────── */
+    .map-note {
+      background: var(--bg2); border-top: 1px solid var(--border);
+      padding: 6px 14px; font-size: .75rem; color: var(--muted); flex-shrink: 0;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    }
+    .class-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: .75rem; }
+
+    /* empty state */
+    .empty-state { padding: 40px; text-align: center; color: var(--muted); font-size: .9rem; }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading">
+  <div class="logo">TetraDENSITY 2.0</div>
+  <div class="sub">Global Tetrapod Population Density Database</div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div id="load-status">Initialising…</div>
+</div>
+
+<!-- Main app (hidden until data loaded) -->
+<div id="app">
+  <header>
+    <button id="sidebar-toggle" title="Toggle filters">☰</button>
+    <div class="brand">TetraDENSITY 2.0</div>
+    <div class="tagline">Global Tetrapod Population Density Database</div>
+    <a class="gh-link" href="https://github.com/andrewzamp/TetraDENSITY" target="_blank" rel="noopener">GitHub ↗</a>
+  </header>
+
+  <div class="body-row">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div>
+        <h3>Filters</h3>
+      </div>
+
+      <!-- Search -->
+      <div class="filter-group">
+        <label>Search species / site / country</label>
+        <input type="text" id="f-search" placeholder="e.g. Canis lupus…" />
+      </div>
+
+      <!-- Class -->
+      <div class="filter-group">
+        <label>Class</label>
+        <div class="class-pills">
+          <div class="pill amphibia" data-class="Amphibia">Amphibia</div>
+          <div class="pill aves"     data-class="Aves">Aves</div>
+          <div class="pill mammalia" data-class="Mammalia">Mammalia</div>
+          <div class="pill reptilia" data-class="Reptilia">Reptilia</div>
+        </div>
+      </div>
+
+      <!-- Order -->
+      <div class="filter-group">
+        <label>Order</label>
+        <select id="f-order"><option value="">All orders</option></select>
+      </div>
+
+      <!-- Country -->
+      <div class="filter-group">
+        <label>Country</label>
+        <select id="f-country"><option value="">All countries</option></select>
+      </div>
+
+      <!-- Method -->
+      <div class="filter-group">
+        <label>Method</label>
+        <select id="f-method"><option value="">All methods</option></select>
+      </div>
+
+      <!-- Year range -->
+      <div class="filter-group">
+        <label>Year range</label>
+        <div class="range-row">
+          <input type="number" id="f-year-min" placeholder="From" min="1900" max="2030" />
+          <span>–</span>
+          <input type="number" id="f-year-max" placeholder="To"   min="1900" max="2030" />
+        </div>
+      </div>
+
+      <button id="reset-btn">Reset all filters</button>
+
+      <div class="record-count">
+        <strong id="count-display">–</strong>
+        records matching
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div id="main">
+      <!-- Stats bar -->
+      <div id="stats-bar">
+        <div class="stat-card"><div class="val" id="s-records">–</div><div class="lbl">Records</div></div>
+        <div class="stat-card"><div class="val" id="s-species">–</div><div class="lbl">Unique species</div></div>
+        <div class="stat-card"><div class="val" id="s-countries">–</div><div class="lbl">Countries</div></div>
+        <div class="stat-card"><div class="val" id="s-years">–</div><div class="lbl">Year range</div></div>
+        <div class="stat-card"><div class="val" id="s-density-med">–</div><div class="lbl">Median density (ind/ha)</div></div>
+      </div>
+
+      <!-- Tab bar -->
+      <div id="tab-bar">
+        <div class="tab active" data-tab="map">🗺 Map</div>
+        <div class="tab" data-tab="charts">📊 Charts</div>
+        <div class="tab" data-tab="table">📋 Table</div>
+        <div class="tab" data-tab="refs">📚 References</div>
+      </div>
+
+      <!-- Map panel -->
+      <div class="tab-panel active" id="tab-map">
+        <div id="map"></div>
+        <div class="map-note">
+          <div class="class-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--amphibia)"></span>Amphibia</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--aves)"></span>Aves</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--mammalia)"></span>Mammalia</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--reptilia)"></span>Reptilia</div>
+          </div>
+          <span id="map-count-note"></span>
+        </div>
+      </div>
+
+      <!-- Charts panel -->
+      <div class="tab-panel" id="tab-charts">
+        <div id="charts-panel">
+          <div class="chart-card">
+            <h4>Records by Class</h4>
+            <canvas id="chart-class"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>Records by Order (top 15)</h4>
+            <canvas id="chart-order"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>Records by Country (top 20)</h4>
+            <canvas id="chart-country"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>Records by Method</h4>
+            <canvas id="chart-method"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>Density distribution (ind/ha, log scale)</h4>
+            <canvas id="chart-density"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>Records by decade</h4>
+            <canvas id="chart-year"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table panel -->
+      <div class="tab-panel" id="tab-table">
+        <div id="table-panel">
+          <div class="table-controls">
+            <label>Rows:
+              <select id="page-size">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </label>
+            <input type="text" id="table-search" placeholder="Quick search table…" style="max-width:220px;" />
+            <div style="margin-left:auto; color: var(--muted); font-size:.78rem;">Click column headers to sort</div>
+          </div>
+          <!-- Column visibility -->
+          <div id="col-toggle-area"></div>
+          <div class="table-wrap">
+            <table id="data-table">
+              <thead id="table-head"></thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+
+      <!-- References panel -->
+      <div class="tab-panel" id="tab-refs">
+        <div id="refs-panel"></div>
+      </div>
+    </div><!-- /#main -->
+  </div><!-- /.body-row -->
+</div><!-- /#app -->
+
+<!-- Scripts -->
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+/* ================================================================
+   TetraDENSITY 2.0 – Interactive Explorer
+   ================================================================ */
+
+// ── State ──────────────────────────────────────────────────────────
+const state = {
+  allRows:      [],
+  refRows:      [],
+  filteredRows: [],
+  filters: {
+    search:  '',
+    classes: new Set(['Amphibia', 'Aves', 'Mammalia', 'Reptilia']),
+    order:   '',
+    country: '',
+    method:  '',
+    yearMin: null,
+    yearMax: null,
+  },
+  table: {
+    page:     1,
+    pageSize: 25,
+    sortCol:  null,
+    sortDir:  'asc',
+    search:   '',
+    visibleCols: null,   // set after headers known
+  },
+  charts: {},
+  map: null,
+  clusterLayer: null,
+  markers: [],          // parallel to allRows for map
+};
+
+const CLASS_COLORS = {
+  Amphibia: '#4ec96d',
+  Aves:     '#5baff5',
+  Mammalia: '#f07b3f',
+  Reptilia: '#c97cf0',
+};
+
+// Table columns to show (label, key)
+const COLUMNS = [
+  { key: 'Class',        label: 'Class' },
+  { key: 'Order',        label: 'Order' },
+  { key: 'Family',       label: 'Family' },
+  { key: 'Species_rep',  label: 'Species' },
+  { key: 'Year',         label: 'Year' },
+  { key: 'Country',      label: 'Country' },
+  { key: 'Site',         label: 'Site' },
+  { key: 'Density',      label: 'Density' },
+  { key: 'Density_unit', label: 'Unit' },
+  { key: 'Method',       label: 'Method' },
+  { key: 'Sampling_area',label: 'Area' },
+  { key: 'X',            label: 'Lon' },
+  { key: 'Y',            label: 'Lat' },
+  { key: 'Native',       label: 'Native' },
+  { key: 'Season',       label: 'Season' },
+  { key: 'Notes',        label: 'Notes' },
+];
+
+const DEFAULT_COLS = new Set(['Class','Order','Family','Species_rep','Year','Country','Site','Density','Density_unit','Method']);
+
+// ── Utility ─────────────────────────────────────────────────────────
+function fmt(n) {
+  if (n === null || n === undefined) return '–';
+  if (typeof n === 'number') return n.toLocaleString();
+  return n;
+}
+function parseNum(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+function debounce(fn, ms) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ── Loading helpers ──────────────────────────────────────────────────
+function setProgress(pct, msg) {
+  document.getElementById('progress-fill').style.width = pct + '%';
+  if (msg) document.getElementById('load-status').textContent = msg;
+}
+
+// ── Load data ────────────────────────────────────────────────────────
+function loadData() {
+  setProgress(5, 'Loading database CSV…');
+
+  // Load refs first (small file)
+  Papa.parse('data/TetraDENSITY_2.0_References.csv', {
+    download: true, header: true, skipEmptyLines: true,
+    complete(result) {
+      state.refRows = result.data;
+      renderRefs();
+    }
+  });
+
+  // Load main database (large file)
+  Papa.parse('data/TetraDENSITY_2.0_Database.csv', {
+    download: true, header: true, skipEmptyLines: true,
+    step(result, parser) {
+      // progress estimation based on bytes not available; approximate by rows
+      if (state.allRows.length % 5000 === 0 && state.allRows.length > 0) {
+        const est = Math.min(10 + (state.allRows.length / 55000) * 80, 89);
+        setProgress(est, `Parsed ${state.allRows.length.toLocaleString()} records…`);
+      }
+      state.allRows.push(result.data);
+    },
+    complete() {
+      setProgress(90, 'Building filters…');
+      setTimeout(init, 0);   // yield to browser
+    },
+    error(err) {
+      document.getElementById('load-status').textContent = 'Error loading CSV: ' + err.message;
+    }
+  });
+}
+
+// ── Initialise after data loaded ──────────────────────────────────────
+function init() {
+  buildFilterOptions();
+  setProgress(93, 'Initialising map…');
+  setTimeout(() => {
+    initMap();
+    setProgress(96, 'Building charts…');
+    setTimeout(() => {
+      initCharts();
+      initTable();
+      applyFilters();
+      bindEvents();
+      setProgress(100, 'Done');
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+      }, 200);
+    }, 0);
+  }, 0);
+}
+
+// ── Build filter dropdowns ─────────────────────────────────────────
+function buildFilterOptions() {
+  const orders    = new Set();
+  const countries = new Set();
+  const methods   = new Set();
+  const years     = [];
+
+  for (const r of state.allRows) {
+    if (r.Order   && r.Order   !== 'NA') orders.add(r.Order);
+    if (r.Country && r.Country !== 'NA') countries.add(r.Country);
+    if (r.Method  && r.Method  !== 'NA') methods.add(r.Method);
+    const y = parseInt(r.Year);
+    if (!isNaN(y)) years.push(y);
+  }
+
+  populate('f-order',   [...orders].sort());
+  populate('f-country', [...countries].sort());
+  populate('f-method',  [...methods].sort());
+
+  if (years.length) {
+    const mn = Math.min(...years), mx = Math.max(...years);
+    document.getElementById('f-year-min').value = mn;
+    document.getElementById('f-year-max').value = mx;
+    document.getElementById('f-year-min').min = mn;
+    document.getElementById('f-year-min').max = mx;
+    document.getElementById('f-year-max').min = mn;
+    document.getElementById('f-year-max').max = mx;
+    state.filters.yearMin = mn;
+    state.filters.yearMax = mx;
+  }
+}
+
+function populate(id, values) {
+  const sel = document.getElementById(id);
+  values.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+// ── Apply filters ──────────────────────────────────────────────────
+function applyFilters() {
+  const f = state.filters;
+  const search  = f.search.toLowerCase();
+  const tsearch = state.table.search.toLowerCase();
+
+  state.filteredRows = state.allRows.filter(r => {
+    // Class
+    if (!f.classes.has(r.Class)) return false;
+    // Order
+    if (f.order && r.Order !== f.order) return false;
+    // Country
+    if (f.country && r.Country !== f.country) return false;
+    // Method
+    if (f.method && r.Method !== f.method) return false;
+    // Year
+    const y = parseInt(r.Year);
+    if (f.yearMin && !isNaN(y) && y < f.yearMin) return false;
+    if (f.yearMax && !isNaN(y) && y > f.yearMax) return false;
+    // Sidebar search
+    if (search) {
+      const hay = ((r.Species_rep||'') + (r.Site||'') + (r.Country||'')).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  // Table search is a secondary filter applied at render time
+  updateStats();
+  updateMap();
+  updateCharts();
+  state.table.page = 1;
+  renderTable();
+  document.getElementById('count-display').textContent = state.filteredRows.length.toLocaleString();
+}
+
+// ── Stats ──────────────────────────────────────────────────────────
+function updateStats() {
+  const rows = state.filteredRows;
+  const species   = new Set(rows.map(r => r.Species_rep)).size;
+  const countries = new Set(rows.map(r => r.Country)).size;
+  const years     = rows.map(r => parseInt(r.Year)).filter(y => !isNaN(y));
+  const densities = rows
+    .filter(r => r.Density_unit === 'ind/ha' || r.Density_unit === 'males/ha')
+    .map(r => parseNum(r.Density)).filter(v => v !== null && v > 0)
+    .sort((a, b) => a - b);
+  const med = densities.length
+    ? densities[Math.floor(densities.length / 2)].toFixed(2)
+    : '–';
+  const yrange = years.length
+    ? Math.min(...years) + '–' + Math.max(...years)
+    : '–';
+
+  document.getElementById('s-records').textContent   = rows.length.toLocaleString();
+  document.getElementById('s-species').textContent   = species.toLocaleString();
+  document.getElementById('s-countries').textContent = countries.toLocaleString();
+  document.getElementById('s-years').textContent     = yrange;
+  document.getElementById('s-density-med').textContent = med;
+}
+
+// ── Map ────────────────────────────────────────────────────────────
+const MAP_MAX_MARKERS = 20000;   // cap for performance
+
+function initMap() {
+  const map = L.map('map', { preferCanvas: true }).setView([20, 0], 2);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a> | &copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18, subdomains: 'abcd',
+  }).addTo(map);
+  state.map = map;
+  state.clusterLayer = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 40 });
+  map.addLayer(state.clusterLayer);
+}
+
+function updateMap() {
+  const cluster = state.clusterLayer;
+  cluster.clearLayers();
+
+  const rows = state.filteredRows;
+  const limit = rows.length > MAP_MAX_MARKERS ? MAP_MAX_MARKERS : rows.length;
+  const step  = rows.length > MAP_MAX_MARKERS ? Math.ceil(rows.length / MAP_MAX_MARKERS) : 1;
+  let shown = 0;
+
+  for (let i = 0; i < rows.length && shown < limit; i += step) {
+    const r = rows[i];
+    const x = parseFloat(r.X), y = parseFloat(r.Y);
+    if (isNaN(x) || isNaN(y)) continue;
+    const color = CLASS_COLORS[r.Class] || '#aaa';
+    const m = L.circleMarker([y, x], {
+      radius: 5, color, fillColor: color, fillOpacity: 0.8, weight: 1,
+    });
+    m.bindPopup(makePopup(r), { maxWidth: 320 });
+    cluster.addLayer(m);
+    shown++;
+  }
+
+  const note = rows.length > MAP_MAX_MARKERS
+    ? `Showing ${shown.toLocaleString()} of ${rows.length.toLocaleString()} records (sampled)`
+    : `Showing ${shown.toLocaleString()} records`;
+  document.getElementById('map-count-note').textContent = note;
+}
+
+function makePopup(r) {
+  const density = r.Density && r.Density !== 'NA' ? `${r.Density} ${r.Density_unit}` : 'N/A';
+  return `
+    <div style="font-family:system-ui,sans-serif;font-size:13px;line-height:1.5;max-width:280px">
+      <b style="font-size:14px">${r.Species_rep || 'Unknown'}</b>
+      <div style="color:#888;font-size:11px;margin-bottom:6px">${r.Class} · ${r.Order} · ${r.Family}</div>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Country</td><td>${r.Country || '–'}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Site</td><td>${r.Site || '–'}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Year</td><td>${r.Year || '–'}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Density</td><td><b>${density}</b></td></tr>
+        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Method</td><td>${r.Method || '–'}</td></tr>
+        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Native</td><td>${r.Native || '–'}</td></tr>
+      </table>
+      ${r.Notes && r.Notes !== 'NA' ? `<div style="margin-top:6px;color:#aaa;font-size:11px">${r.Notes}</div>` : ''}
+    </div>`;
+}
+
+// ── Charts ─────────────────────────────────────────────────────────
+const CHART_DEFAULTS = {
+  color: 'rgba(46,188,179,0.8)',
+  borderColor: 'rgba(46,188,179,1)',
+  plugins: {
+    legend: { display: false },
+    tooltip: { backgroundColor: '#1e2e3e', titleColor: '#dce9f5', bodyColor: '#7a9bbf' },
+  },
+  scales: {
+    x: { ticks: { color: '#7a9bbf', font: { size: 11 } }, grid: { color: '#2a3e52' } },
+    y: { ticks: { color: '#7a9bbf', font: { size: 11 } }, grid: { color: '#2a3e52' } },
+  },
+};
+
+function mkChart(id, type, data, options) {
+  const ctx = document.getElementById(id).getContext('2d');
+  if (state.charts[id]) state.charts[id].destroy();
+  state.charts[id] = new Chart(ctx, { type, data, options });
+}
+
+function initCharts() { updateCharts(); }
+
+function updateCharts() {
+  const rows = state.filteredRows;
+
+  // ── Class chart
+  const classCounts = {};
+  for (const r of rows) { classCounts[r.Class] = (classCounts[r.Class] || 0) + 1; }
+  const classKeys = Object.keys(classCounts);
+  mkChart('chart-class', 'doughnut', {
+    labels: classKeys,
+    datasets: [{ data: classKeys.map(k => classCounts[k]),
+      backgroundColor: classKeys.map(k => CLASS_COLORS[k] || '#aaa'),
+      borderColor: 'transparent', hoverOffset: 6 }]
+  }, {
+    plugins: {
+      legend: { display: true, position: 'right', labels: { color: '#7a9bbf', padding: 12, font: { size: 11 } } },
+      tooltip: CHART_DEFAULTS.plugins.tooltip,
+    },
+    cutout: '55%',
+  });
+
+  // ── Order chart (top 15)
+  const orderCounts = {};
+  for (const r of rows) { if (r.Order && r.Order !== 'NA') orderCounts[r.Order] = (orderCounts[r.Order]||0)+1; }
+  const topOrders = Object.entries(orderCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  mkChart('chart-order', 'bar', {
+    labels: topOrders.map(([k])=>k),
+    datasets: [{ data: topOrders.map(([,v])=>v),
+      backgroundColor: 'rgba(91,175,245,0.75)', borderRadius: 4 }]
+  }, {
+    indexAxis: 'y',
+    plugins: CHART_DEFAULTS.plugins,
+    scales: {
+      x: { ...CHART_DEFAULTS.scales.x },
+      y: { ticks: { color: '#7a9bbf', font: { size: 10 } }, grid: { color: '#2a3e52' } },
+    },
+  });
+
+  // ── Country chart (top 20)
+  const ctryCounts = {};
+  for (const r of rows) { if (r.Country && r.Country !== 'NA') ctryCounts[r.Country] = (ctryCounts[r.Country]||0)+1; }
+  const topCtry = Object.entries(ctryCounts).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  mkChart('chart-country', 'bar', {
+    labels: topCtry.map(([k])=>k),
+    datasets: [{ data: topCtry.map(([,v])=>v),
+      backgroundColor: 'rgba(240,136,62,0.75)', borderRadius: 4 }]
+  }, {
+    indexAxis: 'y',
+    plugins: CHART_DEFAULTS.plugins,
+    scales: {
+      x: { ...CHART_DEFAULTS.scales.x },
+      y: { ticks: { color: '#7a9bbf', font: { size: 10 } }, grid: { color: '#2a3e52' } },
+    },
+  });
+
+  // ── Method chart
+  const methodCounts = {};
+  for (const r of rows) { if (r.Method && r.Method !== 'NA') methodCounts[r.Method] = (methodCounts[r.Method]||0)+1; }
+  const methods = Object.entries(methodCounts).sort((a,b)=>b[1]-a[1]);
+  mkChart('chart-method', 'bar', {
+    labels: methods.map(([k])=>k.replace(/_/g,' ')),
+    datasets: [{ data: methods.map(([,v])=>v),
+      backgroundColor: 'rgba(201,124,240,0.75)', borderRadius: 4 }]
+  }, {
+    indexAxis: 'y',
+    plugins: CHART_DEFAULTS.plugins,
+    scales: {
+      x: { ...CHART_DEFAULTS.scales.x },
+      y: { ticks: { color: '#7a9bbf', font: { size: 10 } }, grid: { color: '#2a3e52' } },
+    },
+  });
+
+  // ── Density histogram (log bins, ind/ha only)
+  const densVals = rows
+    .filter(r => r.Density_unit === 'ind/ha' || r.Density_unit === 'males/ha')
+    .map(r => parseNum(r.Density)).filter(v => v !== null && v > 0);
+  const bins = logBins(densVals, 15);
+  mkChart('chart-density', 'bar', {
+    labels: bins.labels,
+    datasets: [{ data: bins.counts, backgroundColor: 'rgba(46,188,179,0.75)', borderRadius: 4 }]
+  }, {
+    plugins: CHART_DEFAULTS.plugins,
+    scales: { x: CHART_DEFAULTS.scales.x, y: CHART_DEFAULTS.scales.y },
+  });
+
+  // ── Year / decade chart
+  const decadeCounts = {};
+  for (const r of rows) {
+    const y = parseInt(r.Year);
+    if (!isNaN(y) && y > 1900) {
+      const d = Math.floor(y / 10) * 10;
+      decadeCounts[d] = (decadeCounts[d] || 0) + 1;
+    }
+  }
+  const decades = Object.entries(decadeCounts).sort((a,b)=>+a[0]-+b[0]);
+  mkChart('chart-year', 'bar', {
+    labels: decades.map(([k])=>k+'s'),
+    datasets: [{ data: decades.map(([,v])=>v), backgroundColor: 'rgba(78,201,109,0.75)', borderRadius: 4 }]
+  }, {
+    plugins: CHART_DEFAULTS.plugins,
+    scales: { x: CHART_DEFAULTS.scales.x, y: CHART_DEFAULTS.scales.y },
+  });
+}
+
+function logBins(vals, n) {
+  if (!vals.length) return { labels: [], counts: [] };
+  const mn = Math.log10(Math.min(...vals) || 0.001);
+  const mx = Math.log10(Math.max(...vals));
+  const step = (mx - mn) / n;
+  const edges = Array.from({length: n+1}, (_, i) => mn + i * step);
+  const counts = new Array(n).fill(0);
+  for (const v of vals) {
+    const lv = Math.log10(v);
+    const bi = Math.min(Math.floor((lv - mn) / step), n - 1);
+    if (bi >= 0) counts[bi]++;
+  }
+  const labels = edges.slice(0,-1).map((e,i) => {
+    const lo = Math.pow(10, e), hi = Math.pow(10, edges[i+1]);
+    return lo < 1 ? lo.toFixed(3) + '–' + hi.toFixed(2)
+                  : Math.round(lo) + '–' + Math.round(hi);
+  });
+  return { labels, counts };
+}
+
+// ── Table ──────────────────────────────────────────────────────────
+function initTable() {
+  state.table.visibleCols = new Set(DEFAULT_COLS);
+
+  // Column toggle badges
+  const area = document.getElementById('col-toggle-area');
+  for (const col of COLUMNS) {
+    const b = document.createElement('div');
+    b.className = 'col-badge' + (DEFAULT_COLS.has(col.key) ? ' on' : '');
+    b.textContent = col.label;
+    b.dataset.key = col.key;
+    b.title = 'Toggle column';
+    b.addEventListener('click', () => {
+      if (state.table.visibleCols.has(col.key)) {
+        if (state.table.visibleCols.size > 1) state.table.visibleCols.delete(col.key);
+      } else {
+        state.table.visibleCols.add(col.key);
+      }
+      b.classList.toggle('on', state.table.visibleCols.has(col.key));
+      renderTable();
+    });
+    area.appendChild(b);
+  }
+}
+
+function getVisibleCols() {
+  return COLUMNS.filter(c => state.table.visibleCols.has(c.key));
+}
+
+function renderTable() {
+  const t = state.table;
+  const tsearch = t.search.toLowerCase();
+
+  // Filter by table quick-search
+  let rows = state.filteredRows;
+  if (tsearch) {
+    rows = rows.filter(r => {
+      const hay = COLUMNS.map(c => r[c.key] || '').join(' ').toLowerCase();
+      return hay.includes(tsearch);
+    });
+  }
+
+  // Sort
+  if (t.sortCol) {
+    rows = [...rows].sort((a, b) => {
+      let av = a[t.sortCol], bv = b[t.sortCol];
+      const an = parseFloat(av), bn = parseFloat(bv);
+      if (!isNaN(an) && !isNaN(bn)) { av = an; bv = bn; }
+      else { av = (av||'').toString(); bv = (bv||'').toString(); }
+      return t.sortDir === 'asc' ? (av < bv ? -1 : av > bv ? 1 : 0) : (av > bv ? -1 : av < bv ? 1 : 0);
+    });
+  }
+
+  const totalRows = rows.length;
+  const ps = t.pageSize;
+  const totalPages = Math.max(1, Math.ceil(totalRows / ps));
+  if (t.page > totalPages) t.page = totalPages;
+  const slice = rows.slice((t.page - 1) * ps, t.page * ps);
+  const vcols = getVisibleCols();
+
+  // Header
+  const thead = document.getElementById('table-head');
+  thead.innerHTML = '';
+  const tr = document.createElement('tr');
+  for (const col of vcols) {
+    const th = document.createElement('th');
+    const isSorted = t.sortCol === col.key;
+    th.className = isSorted ? ('sort-' + t.sortDir) : '';
+    th.innerHTML = col.label + '<span class="sort-icon"></span>';
+    th.dataset.key = col.key;
+    th.addEventListener('click', () => {
+      if (t.sortCol === col.key) {
+        t.sortDir = t.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        t.sortCol = col.key;
+        t.sortDir = 'asc';
+      }
+      renderTable();
+    });
+    tr.appendChild(th);
+  }
+  thead.appendChild(tr);
+
+  // Body
+  const tbody = document.getElementById('table-body');
+  if (!slice.length) {
+    tbody.innerHTML = `<tr><td colspan="${vcols.length}" class="empty-state">No records match the current filters.</td></tr>`;
+  } else {
+    const html = slice.map(r => {
+      const cells = vcols.map(col => {
+        if (col.key === 'Class') {
+          return `<td><span class="badge-class badge-${r.Class}">${r.Class}</span></td>`;
+        }
+        const v = r[col.key];
+        const disp = (!v || v === 'NA') ? '<span style="color:#2a3e52">–</span>' : escHtml(v);
+        return `<td title="${escHtml(v||'')}">${disp}</td>`;
+      });
+      return `<tr>${cells.join('')}</tr>`;
+    }).join('');
+    tbody.innerHTML = html;
+  }
+
+  // Pagination
+  renderPagination(totalRows, totalPages);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderPagination(totalRows, totalPages) {
+  const t = state.table;
+  const pg = document.getElementById('pagination');
+  pg.innerHTML = '';
+
+  const add = (label, action, disabled=false) => {
+    const b = document.createElement('button');
+    b.innerHTML = label;
+    b.disabled = disabled;
+    if (!disabled) b.addEventListener('click', action);
+    pg.appendChild(b);
+  };
+
+  add('«', () => { t.page = 1; renderTable(); }, t.page === 1);
+  add('‹', () => { t.page--; renderTable(); }, t.page === 1);
+
+  const info = document.createElement('span');
+  info.className = 'page-info';
+  const from = (t.page-1)*t.pageSize+1, to = Math.min(t.page*t.pageSize, totalRows);
+  info.textContent = `${from.toLocaleString()}–${to.toLocaleString()} of ${totalRows.toLocaleString()}`;
+  pg.appendChild(info);
+
+  add('›', () => { t.page++; renderTable(); }, t.page === totalPages);
+  add('»', () => { t.page = totalPages; renderTable(); }, t.page === totalPages);
+
+  // Jump input
+  const jump = document.createElement('input');
+  jump.type = 'number'; jump.min = 1; jump.max = totalPages;
+  jump.className = 'page-jump'; jump.placeholder = 'Page'; jump.title = 'Jump to page';
+  jump.style.cssText = 'background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px;border-radius:var(--radius);width:70px;font-size:.8rem;';
+  jump.addEventListener('change', () => {
+    const p = parseInt(jump.value);
+    if (p >= 1 && p <= totalPages) { t.page = p; renderTable(); }
+  });
+  pg.appendChild(jump);
+
+  const pageInfo2 = document.createElement('span');
+  pageInfo2.className = 'page-info';
+  pageInfo2.textContent = `of ${totalPages.toLocaleString()} pages`;
+  pg.appendChild(pageInfo2);
+}
+
+// ── References ─────────────────────────────────────────────────────
+function renderRefs() {
+  const panel = document.getElementById('refs-panel');
+  panel.innerHTML = '';
+  for (const r of state.refRows) {
+    const div = document.createElement('div');
+    div.className = 'ref-item';
+    div.innerHTML = `<div class="ref-num">#${r.Ref_N}</div><div class="ref-text">${escHtml(r.Reference || '')}</div>`;
+    panel.appendChild(div);
+  }
+  if (!state.refRows.length) {
+    panel.innerHTML = '<div class="empty-state">References not yet loaded.</div>';
+  }
+}
+
+// ── Event bindings ─────────────────────────────────────────────────
+function bindEvents() {
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = document.getElementById('tab-' + tab.dataset.tab);
+      panel.classList.add('active');
+      if (tab.dataset.tab === 'map') { setTimeout(() => state.map.invalidateSize(), 100); }
+    });
+  });
+
+  // Sidebar toggle (mobile)
+  document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+
+  // Class pills
+  document.querySelectorAll('.pill[data-class]').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const cls = pill.dataset.class;
+      if (state.filters.classes.has(cls)) {
+        if (state.filters.classes.size > 1) {
+          state.filters.classes.delete(cls);
+          pill.classList.add('inactive');
+        }
+      } else {
+        state.filters.classes.add(cls);
+        pill.classList.remove('inactive');
+      }
+      applyFilters();
+    });
+  });
+
+  // Dropdowns
+  ['f-order','f-country','f-method'].forEach(id => {
+    document.getElementById(id).addEventListener('change', e => {
+      state.filters[id.replace('f-','')] = e.target.value;
+      applyFilters();
+    });
+  });
+
+  // Year range
+  const applyYear = debounce(() => {
+    state.filters.yearMin = parseInt(document.getElementById('f-year-min').value) || null;
+    state.filters.yearMax = parseInt(document.getElementById('f-year-max').value) || null;
+    applyFilters();
+  }, 400);
+  document.getElementById('f-year-min').addEventListener('input', applyYear);
+  document.getElementById('f-year-max').addEventListener('input', applyYear);
+
+  // Sidebar search
+  document.getElementById('f-search').addEventListener('input', debounce(e => {
+    state.filters.search = e.target.value;
+    applyFilters();
+  }, 350));
+
+  // Table search
+  document.getElementById('table-search').addEventListener('input', debounce(e => {
+    state.table.search = e.target.value;
+    state.table.page = 1;
+    renderTable();
+  }, 300));
+
+  // Page size
+  document.getElementById('page-size').addEventListener('change', e => {
+    state.table.pageSize = parseInt(e.target.value);
+    state.table.page = 1;
+    renderTable();
+  });
+
+  // Reset
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    state.filters.search  = '';
+    state.filters.classes = new Set(['Amphibia','Aves','Mammalia','Reptilia']);
+    state.filters.order   = '';
+    state.filters.country = '';
+    state.filters.method  = '';
+    document.getElementById('f-search').value  = '';
+    document.getElementById('f-order').value   = '';
+    document.getElementById('f-country').value = '';
+    document.getElementById('f-method').value  = '';
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('inactive'));
+    // Reset year to full range
+    const yminEl = document.getElementById('f-year-min');
+    const ymaxEl = document.getElementById('f-year-max');
+    state.filters.yearMin = parseInt(yminEl.min) || null;
+    state.filters.yearMax = parseInt(ymaxEl.max) || null;
+    yminEl.value = yminEl.min;
+    ymaxEl.value = ymaxEl.max;
+    applyFilters();
+  });
+}
+
+// ── Start ──────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
