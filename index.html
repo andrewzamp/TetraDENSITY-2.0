@@ -15,14 +15,14 @@
     /* ── Reset & base ─────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:       #f4f7fb;
-      --bg2:      #ffffff;
-      --bg3:      #eaeef5;
-      --border:   #c8d4e4;
-      --text:     #1e2d3e;
-      --muted:    #5a7290;
-      --accent:   #1a9e96;
-      --accent2:  #d9711f;
+      --bg:       #0f1923;
+      --bg2:      #162030;
+      --bg3:      #1e2e42;
+      --border:   #2d4460;
+      --text:     #d4e6f5;
+      --muted:    #7a9bbf;
+      --accent:   #2dd4c8;
+      --accent2:  #f0913a;
       --amphibia: #4ec96d;
       --aves:     #5baff5;
       --mammalia: #f07b3f;
@@ -30,6 +30,7 @@
       --sidebar-w: 280px;
       --header-h:  60px;
       --radius:    8px;
+      --bg2-glass: rgba(22, 32, 48, 0.85);
     }
     html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; font-size: 14px; background: var(--bg); color: var(--text); }
 
@@ -87,10 +88,10 @@
       padding: 4px 10px; border-radius: 20px; border: 2px solid transparent;
       cursor: pointer; font-size: .75rem; font-weight: 600; transition: opacity .2s, border-color .2s;
     }
-    .pill.amphibia { background: #e8f5ee; color: #2a8042; border-color: #2a8042; }
-    .pill.aves     { background: #e6f0fb; color: #2260a0; border-color: #2260a0; }
-    .pill.mammalia { background: #fdf0e8; color: #b85520; border-color: #b85520; }
-    .pill.reptilia { background: #f4eafb; color: #7030a0; border-color: #7030a0; }
+    .pill.amphibia { background: #1a3d27; color: #5de87d; border-color: #3aad56; }
+    .pill.aves     { background: #182a42; color: #6dbfff; border-color: #3a7cc8; }
+    .pill.mammalia { background: #3a2010; color: #f7a06a; border-color: #c86030; }
+    .pill.reptilia { background: #2e1a40; color: #d98ef5; border-color: #9045c0; }
     .pill.inactive { opacity: .35; }
     .range-row { display: flex; gap: 8px; align-items: center; }
     .range-row input[type=number] { flex: 1; }
@@ -181,10 +182,10 @@
     .badge-class {
       display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: .7rem; font-weight: 600;
     }
-    .badge-Amphibia { background: #e8f5ee; color: #2a8042; }
-    .badge-Aves     { background: #e6f0fb; color: #2260a0; }
-    .badge-Mammalia { background: #fdf0e8; color: #b85520; }
-    .badge-Reptilia { background: #f4eafb; color: #7030a0; }
+    .badge-Amphibia { background: #1a3d27; color: #5de87d; }
+    .badge-Aves     { background: #182a42; color: #6dbfff; }
+    .badge-Mammalia { background: #3a2010; color: #f7a06a; }
+    .badge-Reptilia { background: #2e1a40; color: #d98ef5; }
     .pagination {
       display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding-top: 4px;
     }
@@ -271,8 +272,76 @@
 
     /* ── Clickable table rows ─────────────────────────────────────── */
     tbody tr.has-coords { cursor: pointer; }
-    tbody tr.row-highlight { background: #e6f4f3; outline: 2px solid var(--accent); outline-offset: -2px; }
-    tbody tr.row-highlight:hover { background: #d8efee; }
+    tbody tr.row-highlight { background: #193838; outline: 2px solid var(--accent); outline-offset: -2px; }
+    tbody tr.row-highlight:hover { background: #1f4545; }
+    /* ── Leaflet dark popup ───────────────────────────────────────── */
+    .leaflet-popup-content-wrapper {
+      background: var(--bg2); color: var(--text); border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(0,0,0,.5);
+    }
+    .leaflet-popup-tip { background: var(--bg2); }
+    .leaflet-popup-close-button { color: var(--muted) !important; }
+    .leaflet-popup-close-button:hover { color: var(--text) !important; }
+
+    /* ── Leaflet dark controls ────────────────────────────────────── */
+    .leaflet-control-zoom a {
+      background: var(--bg2) !important; color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+    .leaflet-control-zoom a:hover { background: var(--bg3) !important; }
+    .leaflet-control-attribution {
+      background: var(--bg2-glass) !important; color: var(--muted) !important;
+    }
+    .leaflet-control-attribution a { color: var(--accent) !important; }
+
+    /* ── Map info panel ───────────────────────────────────────────── */
+    #tab-map { position: relative; }
+    #map-info-panel {
+      position: absolute; top: 12px; right: 12px; z-index: 900;
+      width: 290px; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: 0 4px 20px rgba(0,0,0,.55);
+      display: flex; flex-direction: column; gap: 0;
+      transform: translateX(calc(100% + 20px)); transition: transform .25s ease;
+      pointer-events: none;
+    }
+    #map-info-panel.open { transform: translateX(0); pointer-events: auto; }
+    .mip-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 12px 14px 8px; gap: 8px; border-bottom: 1px solid var(--border);
+    }
+    .mip-species { font-size: .95rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .mip-taxon   { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+    #mip-close {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 1.1rem; line-height: 1; padding: 0 2px; flex-shrink: 0;
+      transition: color .15s;
+    }
+    #mip-close:hover { color: var(--text); }
+    .mip-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 0; }
+    .mip-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 4px 0; border-bottom: 1px solid var(--bg3); font-size: .8rem;
+    }
+    .mip-row:last-child { border-bottom: none; }
+    .mip-label { color: var(--muted); }
+    .mip-value { color: var(--text); font-weight: 500; text-align: right; max-width: 170px; word-break: break-word; }
+    .mip-value b { color: var(--accent); }
+    .mip-footer { padding: 10px 14px; border-top: 1px solid var(--border); }
+    .mip-link {
+      display: block; text-align: center; padding: 7px;
+      background: var(--bg3); border: 1px solid var(--accent);
+      color: var(--accent); border-radius: var(--radius);
+      font-size: .8rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: background .2s, color .2s;
+    }
+    .mip-link:hover { background: var(--accent); color: var(--bg2); }
+    @media (max-width: 680px) {
+      #map-info-panel {
+        top: auto; bottom: 48px; right: 8px; left: 8px; width: auto;
+        transform: translateY(calc(100% + 60px));
+      }
+      #map-info-panel.open { transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -388,7 +457,22 @@
       <!-- Map panel -->
       <div class="tab-panel active" id="tab-map">
         <div id="map"></div>
-        <div class="map-note">
+      <!-- Map info panel (appears on marker click) -->
+      <div id="map-info-panel" role="complementary" aria-label="Record details">
+        <div class="mip-header">
+          <div>
+            <div class="mip-species" id="mip-species"></div>
+            <div class="mip-taxon"   id="mip-taxon"></div>
+          </div>
+          <button id="mip-close" title="Close" aria-label="Close panel">✕</button>
+        </div>
+        <div class="mip-body" id="mip-body"></div>
+        <div class="mip-footer">
+          <a class="mip-link" id="mip-table-link" href="#">View in table →</a>
+        </div>
+      </div>
+      <!-- Map note -->
+      <div class="map-note">
           <div class="class-legend">
             <div class="legend-item"><span class="legend-dot" style="background:var(--amphibia)"></span>Amphibia</div>
             <div class="legend-item"><span class="legend-dot" style="background:var(--aves)"></span>Aves</div>
@@ -747,6 +831,7 @@ function applyFilters() {
 
   // Clear row highlight when filters change
   state.table.highlightRow = null;
+  closeMapInfoPanel();
   // Table search is a secondary filter applied at render time
   updateStats();
   updateMap();
@@ -792,7 +877,7 @@ const MAP_MAX_MARKERS = 20000;
 
 function initMap() {
   const map = L.map('map', { preferCanvas: true }).setView([20, 0], 2);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://carto.com/">CARTO</a> | &copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
     maxZoom: 18, subdomains: 'abcd',
   }).addTo(map);
@@ -818,7 +903,7 @@ function updateMap() {
     const m = L.circleMarker([y, x], {
       radius: 5, color, fillColor: color, fillOpacity: 0.8, weight: 1,
     });
-    m.on('click', () => openRowInTable(r));
+    m.on('click', () => showMapInfoPanel(r));
     cluster.addLayer(m);
     shown++;
   }
@@ -829,31 +914,55 @@ function updateMap() {
   document.getElementById('map-count-note').textContent = note;
 }
 
-function makePopup(r) {
+// ── Map info panel ─────────────────────────────────────────────────
+function showMapInfoPanel(r) {
+  const panel   = document.getElementById('map-info-panel');
   const density = r.Density && r.Density !== 'NA' ? `${r.Density} ${r.Density_unit}` : 'N/A';
-  return `
-    <div style="font-family:system-ui,sans-serif;font-size:13px;line-height:1.5;max-width:280px">
-      <b style="font-size:14px">${r.Species_rep || 'Unknown'}</b>
-      <div style="color:#888;font-size:11px;margin-bottom:6px">${r.Class} · ${r.Order} · ${r.Family}</div>
-      <table style="width:100%;border-collapse:collapse">
-        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Country</td><td>${r.Country || '–'}</td></tr>
-        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Site</td><td>${r.Site || '–'}</td></tr>
-        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Year</td><td>${r.Year || '–'}</td></tr>
-        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Density</td><td><b>${density}</b></td></tr>
-        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Method</td><td>${r.Method || '–'}</td></tr>
-        <tr><td style="color:#aaa;padding:2px 8px 2px 0">Native</td><td>${r.Native || '–'}</td></tr>
-      </table>
-      ${r.Notes && r.Notes !== 'NA' ? `<div style="margin-top:6px;color:#aaa;font-size:11px">${r.Notes}</div>` : ''}
-    </div>`;
+
+  document.getElementById('mip-species').textContent = r.Species_rep || 'Unknown';
+  document.getElementById('mip-taxon').textContent   =
+    [r.Class, r.Order, r.Family].filter(Boolean).join(' · ');
+
+  const fields = [
+    ['Country',  r.Country  || '–'],
+    ['Site',     r.Site     || '–'],
+    ['Year',     r.Year     || '–'],
+    ['Density',  density,  true],
+    ['Method',   r.Method   || '–'],
+    ['Native',   r.Native   || '–'],
+  ];
+  if (r.Notes && r.Notes !== 'NA') fields.push(['Notes', r.Notes]);
+
+  document.getElementById('mip-body').innerHTML = fields.map(([lbl, val, bold]) =>
+    `<div class="mip-row">
+      <span class="mip-label">${lbl}</span>
+      <span class="mip-value">${bold ? `<b>${val}</b>` : val}</span>
+    </div>`
+  ).join('');
+
+  // Wire the "View in table" link for this specific record
+  const link = document.getElementById('mip-table-link');
+  link.onclick = (e) => {
+    e.preventDefault();
+    closeMapInfoPanel();
+    openRowInTable(r);
+  };
+
+  panel.classList.add('open');
 }
 
-// Chart theme – light
+function closeMapInfoPanel() {
+  document.getElementById('map-info-panel').classList.remove('open');
+}
+
+// Chart theme – read from CSS custom properties
+const _cs = getComputedStyle(document.documentElement);
 const CT = {
-  muted:   '#5a7290',
-  grid:    '#c8d4e4',
-  tipBg:   '#ffffff',
-  tipTitle:'#1e2d3e',
-  tipBody: '#5a7290',
+  muted:   _cs.getPropertyValue('--muted').trim(),
+  grid:    _cs.getPropertyValue('--border').trim(),
+  tipBg:   _cs.getPropertyValue('--bg2').trim(),
+  tipTitle:_cs.getPropertyValue('--text').trim(),
+  tipBody: _cs.getPropertyValue('--muted').trim(),
 };
 
 // ── Charts ─────────────────────────────────────────────────────────
@@ -1285,6 +1394,13 @@ function switchToTab(tabName) {
 
 // ── Event bindings ─────────────────────────────────────────────────
 function bindEvents() {
+  // Map info panel – close button
+  document.getElementById('mip-close').addEventListener('click', closeMapInfoPanel);
+
+  // Map info panel – close when clicking the map background (Leaflet map click
+  // only fires on background clicks, not on markers, so no extra guard needed)
+  state.map.on('click', closeMapInfoPanel);
+
   // Tab switching
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
