@@ -87,16 +87,27 @@
     }
     input[type=text]:focus, select:focus { border-color: var(--accent); }
     select option { background: var(--bg3); }
-    .class-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-    .pill {
-      padding: 4px 10px; border-radius: 20px; border: 2px solid transparent;
-      cursor: pointer; font-size: .75rem; font-weight: 600; transition: opacity .2s, border-color .2s;
+    .class-checks { display: flex; flex-direction: column; gap: 6px; }
+    .check-label {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; font-size: .82rem; font-weight: 600; user-select: none;
     }
-    .pill.amphibia { background: #1a3d27; color: #5de87d; border-color: #3aad56; }
-    .pill.aves     { background: #182a42; color: #6dbfff; border-color: #3a7cc8; }
-    .pill.mammalia { background: #3a2010; color: #f7a06a; border-color: #c86030; }
-    .pill.reptilia { background: #2e1a40; color: #d98ef5; border-color: #9045c0; }
-    .pill.inactive { opacity: .35; }
+    .check-label input[type=checkbox] { display: none; }
+    .check-box {
+      width: 16px; height: 16px; border-radius: 4px; border: 2px solid; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; transition: opacity .2s;
+    }
+    .check-box::after { content: '✓'; font-size: .7rem; display: none; }
+    .check-label input:checked + .check-box::after { display: block; }
+    .check-label input:not(:checked) + .check-box { opacity: .35; }
+    .check-label.amphibia .check-box { background: #1a3d27; color: #5de87d; border-color: #3aad56; }
+    .check-label.aves     .check-box { background: #182a42; color: #6dbfff; border-color: #3a7cc8; }
+    .check-label.mammalia .check-box { background: #3a2010; color: #f7a06a; border-color: #c86030; }
+    .check-label.reptilia .check-box { background: #2e1a40; color: #d98ef5; border-color: #9045c0; }
+    .check-label.amphibia { color: #5de87d; }
+    .check-label.aves     { color: #6dbfff; }
+    .check-label.mammalia { color: #f7a06a; }
+    .check-label.reptilia { color: #d98ef5; }
     .range-row { display: flex; gap: 8px; align-items: center; }
     .range-row input[type=number] { flex: 1; }
     .range-row span { color: var(--muted); }
@@ -252,7 +263,13 @@
     .chart-card-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
     .chart-card-header h4 { margin: 0; }
 
-    /* ── Highlighted reference ────────────────────────────────────── */
+    /* ── Table search clear button ────────────────────────────────── */
+    #table-search-clear {
+      background: var(--bg3); border: 1px solid var(--border); color: var(--muted);
+      border-radius: var(--radius); padding: 6px 10px; cursor: pointer; font-size: .82rem;
+      transition: color .2s, border-color .2s;
+    }
+    #table-search-clear:hover { color: var(--accent); border-color: var(--accent); }
     .ref-item { cursor: pointer; transition: background .2s, border-color .2s; }
     .ref-item:hover { border-color: var(--muted); }
     .ref-item.highlighted { border-color: var(--accent); background: var(--bg3); }
@@ -297,6 +314,19 @@
       background: var(--bg2-glass) !important; color: var(--muted) !important;
     }
     .leaflet-control-attribution a { color: var(--accent) !important; }
+
+    /* ── Leaflet dark layer control ───────────────────────────────── */
+    .leaflet-control-layers {
+      background: var(--bg2) !important; border: 1px solid var(--border) !important;
+      color: var(--text) !important; border-radius: var(--radius) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,.5) !important;
+    }
+    .leaflet-control-layers-toggle {
+      background-color: var(--bg2) !important;
+    }
+    .leaflet-control-layers-list { padding: 6px 10px !important; }
+    .leaflet-control-layers label { color: var(--text) !important; font-size: .8rem !important; }
+    .leaflet-control-layers-separator { border-top-color: var(--border) !important; }
 
     /* ── Map info panel ───────────────────────────────────────────── */
     #tab-map { position: relative; }
@@ -384,11 +414,11 @@
       <!-- Class -->
       <div class="filter-group">
         <label>Class</label>
-        <div class="class-pills">
-          <div class="pill amphibia" data-class="Amphibia">Amphibia</div>
-          <div class="pill aves"     data-class="Aves">Aves</div>
-          <div class="pill mammalia" data-class="Mammalia">Mammalia</div>
-          <div class="pill reptilia" data-class="Reptilia">Reptilia</div>
+        <div class="class-checks">
+          <label class="check-label amphibia"><input type="checkbox" data-class="Amphibia" checked /><span class="check-box"></span>Amphibia</label>
+          <label class="check-label aves">    <input type="checkbox" data-class="Aves"     checked /><span class="check-box"></span>Aves</label>
+          <label class="check-label mammalia"><input type="checkbox" data-class="Mammalia" checked /><span class="check-box"></span>Mammalia</label>
+          <label class="check-label reptilia"><input type="checkbox" data-class="Reptilia" checked /><span class="check-box"></span>Reptilia</label>
         </div>
       </div>
 
@@ -448,7 +478,7 @@
         <div class="stat-card"><div class="val" id="s-species">–</div><div class="lbl">Unique species</div></div>
         <div class="stat-card"><div class="val" id="s-countries">–</div><div class="lbl">Countries</div></div>
         <div class="stat-card"><div class="val" id="s-years">–</div><div class="lbl">Year range</div></div>
-        <div class="stat-card"><div class="val" id="s-density-med">–</div><div class="lbl" id="s-density-lbl">Median density (ind/km²)</div></div>
+        <div class="stat-card"><div class="val" id="s-density-med">–</div><div class="lbl" id="s-density-lbl">Median density (ind/km²)</div><div class="lbl" id="s-density-range" style="font-size:.65rem;margin-top:2px;color:var(--muted)"></div></div>
       </div>
 
       <!-- Tab bar -->
@@ -535,7 +565,8 @@
                 <option value="100">100</option>
               </select>
             </label>
-            <input type="text" id="table-search" placeholder="Quick search table…" style="max-width:220px;" />
+            <input type="text" id="table-search" placeholder="Search table + references…" style="max-width:220px;" />
+            <button id="table-search-clear" title="Clear search">✕ Clear</button>
             <div style="margin-left:auto; color: var(--muted); font-size:.78rem;">Click column headers to sort</div>
           </div>
           <!-- Column visibility -->
@@ -574,6 +605,7 @@ const state = {
   allRows:      [],
   refRows:      [],
   filteredRows: [],
+  refTextMap:   new Map(),   // Ref_N → lowercase reference text, built once after refs load
   filters: {
     search:  '',
     classes: new Set(['Amphibia', 'Aves', 'Mammalia', 'Reptilia']),
@@ -658,6 +690,10 @@ function loadData() {
     download: true, header: true, skipEmptyLines: true,
     complete(result) {
       state.refRows = result.data;
+      // Build reference text lookup once for fast author/title search in applyFilters()
+      for (const ref of state.refRows) {
+        if (ref.Ref_N) state.refTextMap.set(ref.Ref_N, (ref.Reference || '').toLowerCase());
+      }
       renderRefs();
     }
   });
@@ -832,10 +868,16 @@ function applyFilters() {
     const y = parseInt(r.Year);
     if (f.yearMin && !isNaN(y) && y < f.yearMin) return false;
     if (f.yearMax && !isNaN(y) && y > f.yearMax) return false;
-    // Sidebar search
+    // Sidebar search (species / site / country)
     if (search) {
       const hay = ((r.Species_rep||'') + (r.Site||'') + (r.Country||'')).toLowerCase();
       if (!hay.includes(search)) return false;
+    }
+    // Table/keyword search – searches row fields AND reference text (author name etc.)
+    if (tsearch) {
+      const rowHay = COLUMNS.map(c => r[c.key] || '').join(' ').toLowerCase();
+      const refHay = state.refTextMap.get(r.Ref_N) || '';
+      if (!rowHay.includes(tsearch) && !refHay.includes(tsearch)) return false;
     }
     return true;
   });
@@ -843,7 +885,6 @@ function applyFilters() {
   // Clear row highlight when filters change
   state.table.highlightRow = null;
   closeMapInfoPanel();
-  // Table search is a secondary filter applied at render time
   updateStats();
   updateMap();
   updateCharts();
@@ -869,6 +910,8 @@ function updateStats() {
   const med = densities.length
     ? densities[Math.floor(densities.length / 2)].toFixed(2)
     : '–';
+  const minD = densities.length ? densities[0].toFixed(2) : null;
+  const maxD = densities.length ? densities[densities.length - 1].toFixed(2) : null;
   const yrange = years.length
     ? Math.min(...years) + '–' + Math.max(...years)
     : '–';
@@ -880,6 +923,7 @@ function updateStats() {
   document.getElementById('s-years').textContent     = yrange;
   document.getElementById('s-density-med').textContent = med;
   document.getElementById('s-density-lbl').textContent = `Median density (${unitLabel})`;
+  document.getElementById('s-density-range').textContent = minD !== null ? `[min: ${minD}, max: ${maxD}]` : '';
 }
 
 // ── Map ────────────────────────────────────────────────────────────
@@ -898,12 +942,37 @@ function initMap() {
     worldCopyJump: true,
     minZoom: 2,
   }).setView([20, 0], 2);
-  // noWrap omitted (defaults to false) so tiles repeat across the date line.
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://carto.com/" target="_blank" rel="noopener">CARTO</a> | &copy; <a href="https://osm.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
-    maxZoom: 18, subdomains: 'abcd',
-  }).addTo(map);
   state.map = map;
+
+  // ── Base layers ──────────────────────────────────────────────────
+  const baseLayers = {
+    'CartoDB Dark (default)': L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      { attribution: '&copy; <a href="https://carto.com/" target="_blank" rel="noopener">CARTO</a> | &copy; <a href="https://osm.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>', maxZoom: 18, subdomains: 'abcd' }
+    ),
+    'CartoDB Light': L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      { attribution: '&copy; <a href="https://carto.com/" target="_blank" rel="noopener">CARTO</a> | &copy; <a href="https://osm.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>', maxZoom: 18, subdomains: 'abcd' }
+    ),
+    'OpenStreetMap': L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      { attribution: '&copy; <a href="https://osm.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors', maxZoom: 19 }
+    ),
+    'Satellite (Esri)': L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { attribution: '&copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>', maxZoom: 18 }
+    ),
+    'Topography': L.tileLayer(
+      'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+      { attribution: '&copy; <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a>', maxZoom: 17 }
+    ),
+    'Stadia Stamen Terrain': L.tileLayer(
+      'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png',
+      { attribution: '&copy; <a href="https://stadiamaps.com/" target="_blank" rel="noopener">Stadia Maps</a>', maxZoom: 18 }
+    ),
+  };
+  baseLayers['CartoDB Dark (default)'].addTo(map);
+  L.control.layers(baseLayers, {}, { collapsed: true, position: 'topright' }).addTo(map);
   state.clusterLayer = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 40 });
   map.addLayer(state.clusterLayer);
 }
@@ -928,7 +997,7 @@ function updateMap() {
     const color = CLASS_COLORS[r.Class] || '#aaa';
     for (const offset of WORLD_OFFSETS) {
       const m = L.circleMarker([y, x + offset], {
-        radius: 5, color, fillColor: color, fillOpacity: 0.8, weight: 1,
+        radius: 7, color, fillColor: color, fillOpacity: 0.8, weight: 1,
       });
       m.on('click', (e) => {
         L.DomEvent.stopPropagation(e);
@@ -955,7 +1024,7 @@ function showMapInfoPanel(r, latlng) {
     ? `${r.Density} ${r.Density_unit.replace('km2', 'km²')}`
     : 'N/A';
 
-  // Native removed; Density moved to the end (after Method)
+  // Native removed; Density moved to the end (after Method2)
   const fields = [
     ['Country', r.Country || '–'],
     ['Site',    r.Site    || '–'],
@@ -963,7 +1032,7 @@ function showMapInfoPanel(r, latlng) {
     ['Method',  r.Method  || '–'],
     ['Density', density, true],
   ];
-  if (r.Notes && r.Notes !== 'NA') fields.splice(4, 0, ['Notes', r.Notes]); // keep Notes before Density
+  if (r.Method2 && r.Method2 !== 'NA') fields.splice(4, 0, ['Method 2', r.Method2]);
 
   const html = `
     <div style="min-width:240px">
@@ -1258,16 +1327,9 @@ function getVisibleCols() {
 
 function renderTable() {
   const t = state.table;
-  const tsearch = t.search.toLowerCase();
 
-  // Filter by table quick-search
+  // All filtering (including keyword search) is done in applyFilters()
   let rows = state.filteredRows;
-  if (tsearch) {
-    rows = rows.filter(r => {
-      const hay = COLUMNS.map(c => r[c.key] || '').join(' ').toLowerCase();
-      return hay.includes(tsearch);
-    });
-  }
 
   // Sort
   if (t.sortCol) {
@@ -1501,18 +1563,19 @@ function bindEvents() {
     document.getElementById('sidebar').classList.toggle('open');
   });
 
-  // Class pills – update hierarchical dropdowns before applying filters
-  document.querySelectorAll('.pill[data-class]').forEach(pill => {
-    pill.addEventListener('click', () => {
-      const cls = pill.dataset.class;
-      if (state.filters.classes.has(cls)) {
-        if (state.filters.classes.size > 1) {
-          state.filters.classes.delete(cls);
-          pill.classList.add('inactive');
-        }
-      } else {
+  // Class checkboxes – update hierarchical dropdowns before applying filters
+  document.querySelectorAll('input[type=checkbox][data-class]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const cls = cb.dataset.class;
+      if (!cb.checked && state.filters.classes.size <= 1) {
+        // Prevent unchecking the last active class – revert the checkbox
+        cb.checked = true;
+        return;
+      }
+      if (cb.checked) {
         state.filters.classes.add(cls);
-        pill.classList.remove('inactive');
+      } else {
+        state.filters.classes.delete(cls);
       }
       updateOrderOptions();
       updateFamilyOptions();
@@ -1559,12 +1622,20 @@ function bindEvents() {
     applyFilters();
   }, 350));
 
-  // Table search
+  // Table/keyword search – now a primary filter (affects map, table, refs, stats)
   document.getElementById('table-search').addEventListener('input', debounce(e => {
     state.table.search = e.target.value;
     state.table.page = 1;
-    renderTable();
+    applyFilters();
   }, 300));
+
+  // Clear table search
+  document.getElementById('table-search-clear').addEventListener('click', () => {
+    state.table.search = '';
+    document.getElementById('table-search').value = '';
+    state.table.page = 1;
+    applyFilters();
+  });
 
   // Page size
   document.getElementById('page-size').addEventListener('change', e => {
@@ -1623,9 +1694,11 @@ function bindEvents() {
     state.filters.family  = '';
     state.filters.country = '';
     state.filters.method  = '';
+    state.table.search    = '';
     document.getElementById('f-search').value  = '';
     document.getElementById('f-method').value  = '';
-    document.querySelectorAll('.pill').forEach(p => p.classList.remove('inactive'));
+    document.getElementById('table-search').value = '';
+    document.querySelectorAll('input[type=checkbox][data-class]').forEach(cb => { cb.checked = true; });
     updateOrderOptions();
     updateFamilyOptions();
     updateCountryOptions();
