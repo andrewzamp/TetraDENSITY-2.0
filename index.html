@@ -821,12 +821,17 @@ function loadData() {
   Papa.parse('data/TetraDENSITY_2.0_References.csv', {
     download: true, header: true, skipEmptyLines: true,
     complete(result) {
+      console.log('References loaded:', result.data.length, 'rows');
       state.refRows = result.data;
       // Build reference text lookup once for fast author/title search in applyFilters()
       for (const ref of state.refRows) {
         if (ref.Ref_N) state.refTextMap.set(ref.Ref_N, (ref.Reference || '').toLowerCase());
       }
       renderRefs();
+    },
+    error(err) {
+      console.error('Error loading references:', err);
+      document.getElementById('load-status').textContent = 'Error loading references CSV: ' + err.message;
     }
   });
 
@@ -842,11 +847,13 @@ function loadData() {
       state.allRows.push(result.data);
     },
     complete() {
+      console.log('Database loaded:', state.allRows.length, 'rows');
       setProgress(90, 'Building filters…');
       setTimeout(init, 0);   // yield to browser
     },
     error(err) {
-      document.getElementById('load-status').textContent = 'Error loading CSV: ' + err.message;
+      console.error('Error loading database:', err);
+      document.getElementById('load-status').textContent = 'Error loading database CSV: ' + err.message;
     }
   });
 }
