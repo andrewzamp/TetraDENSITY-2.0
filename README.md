@@ -101,7 +101,7 @@ The paper describes the data collection protocol, the geographic and phylogeneti
 
 ## Citation
 
-If you use TetraDENSITY in your work, please cite the paper above. A BibTeX entry is provided below for convenience:
+If you use TetraDENSITY 2.0 in your work, please cite the paper above. A BibTeX entry is provided below for convenience:
 
 ```bibtex
 @article{Santini2024,
