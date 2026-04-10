@@ -888,16 +888,20 @@ const ESTIMATED_TOTAL_ROWS = 55000;  // approximate row count used for progress 
 const MAP_MAX_MARKERS = 20000;
 
 function initMap() {
-  const worldBounds = L.latLngBounds(L.latLng(-85, -180), L.latLng(85, 180));
+  // Restrict only vertical scrolling (poles); allow unlimited horizontal wrapping.
+  // ±18 000° = 50 world copies in each direction – effectively unbounded horizontally.
+  const verticalBounds = L.latLngBounds(L.latLng(-85.05, -18000), L.latLng(85.05, 18000));
   const map = L.map('map', {
     preferCanvas: true,
-    maxBounds: worldBounds,
+    maxBounds: verticalBounds,
     maxBoundsViscosity: 1.0,
+    worldCopyJump: true,
     minZoom: 2,
   }).setView([20, 0], 2);
+  // noWrap omitted (defaults to false) so tiles repeat across the date line.
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://carto.com/">CARTO</a> | &copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
-    maxZoom: 18, subdomains: 'abcd', noWrap: true,
+    maxZoom: 18, subdomains: 'abcd',
   }).addTo(map);
   state.map = map;
   state.clusterLayer = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 40 });
@@ -913,19 +917,25 @@ function updateMap() {
   const step  = rows.length > MAP_MAX_MARKERS ? Math.ceil(rows.length / MAP_MAX_MARKERS) : 1;
   let shown = 0;
 
+  // Longitude offsets for world copies shown left/right of the central map.
+  // Three copies (one world on each side) cover typical panning without tripling marker count.
+  const WORLD_OFFSETS = [-360, 0, 360];
+
   for (let i = 0; i < rows.length && shown < limit; i += step) {
     const r = rows[i];
     const x = parseFloat(r.X), y = parseFloat(r.Y);
     if (isNaN(x) || isNaN(y)) continue;
     const color = CLASS_COLORS[r.Class] || '#aaa';
-    const m = L.circleMarker([y, x], {
-      radius: 5, color, fillColor: color, fillOpacity: 0.8, weight: 1,
-    });
-    m.on('click', (e) => {
-      L.DomEvent.stopPropagation(e);
-      showMapInfoPanel(r, e.latlng);
-    });
-    cluster.addLayer(m);
+    for (const offset of WORLD_OFFSETS) {
+      const m = L.circleMarker([y, x + offset], {
+        radius: 5, color, fillColor: color, fillOpacity: 0.8, weight: 1,
+      });
+      m.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        showMapInfoPanel(r, e.latlng);
+      });
+      cluster.addLayer(m);
+    }
     shown++;
   }
 
