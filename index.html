@@ -62,6 +62,8 @@
       transition: color .2s, border-color .2s;
     }
     header .gh-link:hover { color: var(--accent); border-color: var(--accent); }
+    header .paper-link { color: var(--accent2); border-color: var(--accent2); }
+    header .paper-link:hover { color: #fff; border-color: var(--accent2); background: var(--accent2); }
     #sidebar-toggle {
       background: none; border: 1px solid var(--border); color: var(--muted);
       cursor: pointer; border-radius: 6px; padding: 4px 8px; font-size: 1rem; display: none;
@@ -238,79 +240,6 @@
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-    /* ── Header nav buttons ───────────────────────────────────────── */
-    .nav-btn {
-      background: none; border: 1px solid var(--border); color: var(--muted);
-      padding: 4px 10px; border-radius: var(--radius); cursor: pointer;
-      font-size: .8rem; white-space: nowrap; transition: color .2s, border-color .2s;
-      font-family: inherit;
-    }
-    .nav-btn:hover { color: var(--accent); border-color: var(--accent); }
-    .nav-btn.active { color: var(--accent); border-color: var(--accent); }
-    .nav-btn.suggestions-btn { color: var(--accent2); border-color: var(--accent2); }
-    .nav-btn.suggestions-btn:hover { color: #fff; background: var(--accent2); border-color: var(--accent2); }
-    .nav-btn-group { display: flex; align-items: center; gap: 4px; }
-    .info-icon-btn {
-      background: none; border: 1px solid var(--border); color: var(--muted);
-      width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
-      font-size: .8rem; display: flex; align-items: center; justify-content: center;
-      transition: color .2s, border-color .2s; font-family: inherit; flex-shrink: 0;
-    }
-    .info-icon-btn:hover { color: var(--accent); border-color: var(--accent); }
-    .info-icon-btn.active { color: var(--accent); border-color: var(--accent); }
-    .header-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
-    /* ── Inline header dropdown panels ───────────────────────────── */
-    .header-dropdown-wrap { position: relative; }
-    .header-dropdown {
-      display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 2000;
-      width: 380px; background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); box-shadow: 0 6px 24px rgba(0,0,0,.55);
-      padding: 16px 18px; color: var(--text); font-size: .85rem; line-height: 1.6;
-    }
-    .header-dropdown.open { display: block; }
-    .header-dropdown p { margin: 0; color: var(--muted); }
-    .header-dropdown .dropdown-title {
-      font-size: .72rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1px; color: var(--accent); margin-bottom: 8px;
-    }
-
-    /* ── Research / "Who's using" overlay panel ───────────────────── */
-    #research-panel-overlay {
-      display: none; position: fixed; inset: 0; z-index: 3000;
-      background: rgba(0,0,0,.55); align-items: center; justify-content: center;
-    }
-    #research-panel-overlay.open { display: flex; }
-    #research-panel {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,.6);
-      width: min(720px, 95vw); max-height: 80vh;
-      display: flex; flex-direction: column;
-    }
-    #research-panel-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 18px; border-bottom: 1px solid var(--border);
-    }
-    #research-panel-header h2 {
-      font-size: .95rem; font-weight: 700; color: var(--accent); margin: 0;
-    }
-    #research-panel-close {
-      background: none; border: none; color: var(--muted); cursor: pointer;
-      font-size: 1.2rem; line-height: 1; padding: 0 2px; transition: color .15s;
-    }
-    #research-panel-close:hover { color: var(--text); }
-    #research-panel-body {
-      overflow-y: auto; padding: 16px 18px;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    .research-ref-item {
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 12px 14px;
-      font-size: .82rem; line-height: 1.6; color: var(--text);
-    }
-    .research-ref-item a { color: var(--accent); }
-    .research-ref-item a:hover { text-decoration: underline; }
-
     /* ── Map note ─────────────────────────────────────────────────── */
     .map-note {
       background: var(--bg2); border-top: 1px solid var(--border);
@@ -465,69 +394,9 @@
     <button id="sidebar-toggle" title="Toggle filters">☰</button>
     <div class="brand">TetraDENSITY 2.0</div>
     <div class="tagline">Global Tetrapod Population Density Database</div>
-
-    <nav class="header-nav">
-      <!-- What is TetraDENSITY 2.0? -->
-      <div class="header-dropdown-wrap">
-        <button class="nav-btn" id="btn-what" aria-expanded="false">What is TetraDENSITY 2.0?</button>
-        <div class="header-dropdown" id="dd-what">
-          <div class="dropdown-title">What is TetraDENSITY 2.0?</div>
-          <p><!-- PLACEHOLDER: replace with a brief description of TetraDENSITY 2.0 -->
-            TetraDENSITY 2.0 is a global database of population density estimates for tetrapod vertebrates
-            (amphibians, reptiles, birds, and mammals). It compiles density records from the scientific
-            literature alongside key biological, ecological, and geographic attributes, enabling large-scale
-            analyses of vertebrate abundance patterns across the globe.
-          </p>
-        </div>
-      </div>
-
-      <!-- Who's using TetraDENSITY 2.0? -->
-      <button class="nav-btn" id="btn-who">Who's using TetraDENSITY 2.0?</button>
-
-      <!-- How to cite? -->
-      <div class="header-dropdown-wrap">
-        <button class="nav-btn" id="btn-cite" aria-expanded="false">How to cite?</button>
-        <div class="header-dropdown" id="dd-cite">
-          <div class="dropdown-title">How to cite</div>
-          <p><!-- PLACEHOLDER: replace with the full APA citation for TetraDENSITY 2.0 -->
-            Author, A. A., &amp; Author, B. B. (Year). Title of the article. <em>Journal Name, Volume</em>(Issue), pages.
-            https://doi.org/xxxxx
-          </p>
-        </div>
-      </div>
-
-      <!-- Do you have suggestions? + info icon -->
-      <div class="nav-btn-group">
-        <a class="nav-btn suggestions-btn" id="btn-suggestions"
-           href="#" target="_blank" rel="noopener">
-          Do you have suggestions? ↗
-        </a>
-        <div class="header-dropdown-wrap">
-          <button class="info-icon-btn" id="btn-suggestions-info" title="More info" aria-expanded="false">ℹ</button>
-          <div class="header-dropdown" id="dd-suggestions-info" style="width:320px;">
-            <div class="dropdown-title">Suggestions &amp; Contributions</div>
-            <p><!-- PLACEHOLDER: replace with info about how users can contribute suggestions, report issues, or contact the team -->
-              Have ideas, spotted a problem, or want to contribute data? We'd love to hear from you!
-              Please get in touch via the link above.
-            </p>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <a class="gh-link paper-link" href="https://doi.org/10.1111/geb.13929" target="_blank" rel="noopener">What is TetraDENSITY 2.0? ↗</a>
+    <a class="gh-link" href="https://github.com/andrewzamp/TetraDENSITY" target="_blank" rel="noopener">GitHub ↗</a>
   </header>
-
-  <!-- Research panel overlay ("Who's using") -->
-  <div id="research-panel-overlay" role="dialog" aria-modal="true" aria-labelledby="research-panel-title">
-    <div id="research-panel">
-      <div id="research-panel-header">
-        <h2 id="research-panel-title">Who's using TetraDENSITY 2.0?</h2>
-        <button id="research-panel-close" title="Close" aria-label="Close">✕</button>
-      </div>
-      <div id="research-panel-body">
-        <p style="color:var(--muted);font-size:.82rem;">Loading citations…</p>
-      </div>
-    </div>
-  </div>
 
   <div class="body-row">
     <!-- Sidebar -->
@@ -1912,129 +1781,6 @@ function downloadRefs() {
 
 // ── Start ──────────────────────────────────────────────────────────
 loadData();
-
-// ── Header nav interactions ────────────────────────────────────────
-(function () {
-  // Generic toggle for inline dropdown buttons
-  function setupToggle(btnId, ddId) {
-    const btn = document.getElementById(btnId);
-    const dd  = document.getElementById(ddId);
-    if (!btn || !dd) return;
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      const isOpen = dd.classList.contains('open');
-      // Close all dropdowns first
-      document.querySelectorAll('.header-dropdown.open').forEach(el => {
-        el.classList.remove('open');
-      });
-      document.querySelectorAll('.nav-btn.active, .info-icon-btn.active').forEach(el => {
-        el.classList.remove('active'); el.setAttribute('aria-expanded', 'false');
-      });
-      if (!isOpen) {
-        dd.classList.add('open');
-        btn.classList.add('active');
-        btn.setAttribute('aria-expanded', 'true');
-      }
-    });
-  }
-
-  setupToggle('btn-what',              'dd-what');
-  setupToggle('btn-cite',              'dd-cite');
-  setupToggle('btn-suggestions-info',  'dd-suggestions-info');
-
-  // Close all dropdowns when clicking outside
-  document.addEventListener('click', function () {
-    document.querySelectorAll('.header-dropdown.open').forEach(el => {
-      el.classList.remove('open');
-    });
-    document.querySelectorAll('.nav-btn.active, .info-icon-btn.active').forEach(el => {
-      el.classList.remove('active'); el.setAttribute('aria-expanded', 'false');
-    });
-  });
-  // Prevent clicks inside a dropdown from closing it
-  document.querySelectorAll('.header-dropdown').forEach(dd => {
-    dd.addEventListener('click', e => e.stopPropagation());
-  });
-
-  // ── "Who's using" panel ─────────────────────────────────────────
-  const whoBtn       = document.getElementById('btn-who');
-  const overlay      = document.getElementById('research-panel-overlay');
-  const closeBtn     = document.getElementById('research-panel-close');
-  const panelBody    = document.getElementById('research-panel-body');
-  let   citationsLoaded = false;
-
-  function openResearchPanel() {
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    if (!citationsLoaded) {
-      fetch('assets/TetraDENSITY_research.md')
-        .then(r => r.ok ? r.text() : Promise.reject(r.status))
-        .then(function (text) {
-          citationsLoaded = true;
-          // Split on blank lines separating each citation block
-          const blocks = text.trim().split(/\n\s*\n/).filter(b => b.trim());
-          panelBody.innerHTML = '';
-          blocks.forEach(function (block, i) {
-            const div = document.createElement('div');
-            div.className = 'research-ref-item';
-
-            // Number badge
-            const badge = document.createElement('span');
-            badge.style.cssText = 'color:var(--accent);font-weight:700;margin-right:8px;';
-            badge.textContent = (i + 1) + '.';
-            div.appendChild(badge);
-
-            // Parse the block: split on markdown links and plain DOIs, render safely
-            const raw = block.trim();
-            // Pattern matches [text](url) or bare https:// URLs
-            const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)|(https?:\/\/\S+)/g;
-            let last = 0, m;
-            while ((m = linkPattern.exec(raw)) !== null) {
-              if (m.index > last) {
-                div.appendChild(document.createTextNode(raw.slice(last, m.index)));
-              }
-              const a = document.createElement('a');
-              if (m[1]) {
-                // Markdown link [text](url)
-                a.textContent = m[1];
-                a.href = m[2];
-              } else {
-                // Bare URL
-                a.textContent = m[3];
-                a.href = m[3];
-              }
-              a.target = '_blank';
-              a.rel = 'noopener noreferrer';
-              div.appendChild(a);
-              last = m.index + m[0].length;
-            }
-            if (last < raw.length) {
-              div.appendChild(document.createTextNode(raw.slice(last)));
-            }
-
-            panelBody.appendChild(div);
-          });
-        })
-        .catch(function (err) {
-          panelBody.innerHTML = '<p style="color:var(--muted);">Could not load citations (error: ' + err + ').</p>';
-        });
-    }
-  }
-
-  function closeResearchPanel() {
-    overlay.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  if (whoBtn)   whoBtn.addEventListener('click', openResearchPanel);
-  if (closeBtn) closeBtn.addEventListener('click', closeResearchPanel);
-  if (overlay)  overlay.addEventListener('click', function (e) {
-    if (e.target === overlay) closeResearchPanel();
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && overlay && overlay.classList.contains('open')) closeResearchPanel();
-  });
-}());
-
+</script>
 </body>
 </html>
