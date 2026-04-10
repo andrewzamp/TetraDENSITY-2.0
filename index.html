@@ -494,15 +494,14 @@
         <a href="https://doi.org/10.1111/geb.13929" target="_blank" rel="noopener">https://doi.org/10.1111/geb.13929</a>
       </div>
     </div>
-    <!-- Did you spot an error? link -->
-    <a class="gh-link" href="https://github.com/andrewzamp/TetraDENSITY-2.0/issues/new" target="_blank" rel="noopener">Did you spot an error?</a>
-    <!-- Info icon toggle -->
+    <!-- Did you spot an error? toggle -->
     <div class="hdr-btn-wrap">
-      <button class="gh-link hdr-info-btn" id="btn-info" title="More information">ⓘ</button>
-      <div class="hdr-dropdown" id="drop-info">
-        Did you find an error in the data? Want to contribute new records? 
+      <button class="gh-link" id="btn-report-error">Did you spot an error?</button>
+      <div class="hdr-dropdown" id="drop-report-error">
+        Did you find an error in the data? Want to contribute new records?
         Have a question or suggestion about the database or this web app?
-        Fill out the form on our GitHub issue page and we'll get back to you as soon as we can!
+        <a href="https://github.com/andrewzamp/TetraDENSITY-2.0/issues/new" target="_blank" rel="noopener">Click here</a>
+        to fill out an issue and help us improve the platform!
       </div>
     </div>
     <a class="gh-link" href="https://github.com/andrewzamp/TetraDENSITY" target="_blank" rel="noopener">GitHub page</a>
@@ -1927,7 +1926,7 @@ function initHeaderButtons() {
   const toggleMap = {
     'btn-what':  'drop-what',
     'btn-cite':  'drop-cite',
-    'btn-info':  'drop-info',
+    'btn-report-error': 'drop-report-error',
   };
 
   function closeAllDropdowns() {
