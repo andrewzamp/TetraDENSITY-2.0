@@ -263,6 +263,21 @@
     .chart-card-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
     .chart-card-header h4 { margin: 0; }
 
+    /* ── Keyword filter warning banner ───────────────────────────── */
+    .keyword-warning {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      background: rgba(240, 145, 58, 0.12); border: 1px solid var(--accent2);
+      color: var(--accent2); border-radius: var(--radius);
+      padding: 7px 10px; font-size: .78rem;
+    }
+    .keyword-warning span { flex: 1; }
+    .keyword-warning button {
+      background: none; border: 1px solid var(--accent2); color: var(--accent2);
+      border-radius: var(--radius); padding: 3px 8px; cursor: pointer; font-size: .75rem;
+      transition: background .2s, color .2s; white-space: nowrap;
+    }
+    .keyword-warning button:hover { background: var(--accent2); color: var(--bg2); }
+
     /* ── Table search clear button ────────────────────────────────── */
     #table-search-clear {
       background: var(--bg3); border: 1px solid var(--border); color: var(--muted);
@@ -415,10 +430,10 @@
       <div class="filter-group">
         <label>Class</label>
         <div class="class-checks">
-          <label class="check-label amphibia"><input type="checkbox" data-class="Amphibia" checked /><span class="check-box"></span>Amphibia</label>
-          <label class="check-label aves">    <input type="checkbox" data-class="Aves"     checked /><span class="check-box"></span>Aves</label>
+          <label class="check-label amphibia"><input type="checkbox" data-class="Amphibia" /><span class="check-box"></span>Amphibia</label>
+          <label class="check-label aves">    <input type="checkbox" data-class="Aves"     /><span class="check-box"></span>Aves</label>
           <label class="check-label mammalia"><input type="checkbox" data-class="Mammalia" checked /><span class="check-box"></span>Mammalia</label>
-          <label class="check-label reptilia"><input type="checkbox" data-class="Reptilia" checked /><span class="check-box"></span>Reptilia</label>
+          <label class="check-label reptilia"><input type="checkbox" data-class="Reptilia" /><span class="check-box"></span>Reptilia</label>
         </div>
       </div>
 
@@ -454,6 +469,11 @@
           <span>–</span>
           <input type="number" id="f-year-max" placeholder="To"   min="1900" max="2030" />
         </div>
+      </div>
+
+      <div id="keyword-filter-warning" class="keyword-warning" style="display:none;">
+        <span>⚠ Keyword filter active — results are narrowed across all views.</span>
+        <button id="keyword-clear-sidebar">✕ Clear</button>
       </div>
 
       <button id="reset-btn">Reset all filters</button>
@@ -583,6 +603,10 @@
 
       <!-- References panel -->
       <div class="tab-panel" id="tab-refs">
+        <div id="refs-keyword-warning" class="keyword-warning" style="display:none;margin:12px 16px 0;">
+          <span>⚠ Keyword filter active — only references matching the search are shown.</span>
+          <button id="keyword-clear-refs">✕ Clear</button>
+        </div>
         <div id="refs-panel"></div>
       </div>
     </div><!-- /#main -->
@@ -608,7 +632,7 @@ const state = {
   refTextMap:   new Map(),   // Ref_N → lowercase reference text, built once after refs load
   filters: {
     search:  '',
-    classes: new Set(['Amphibia', 'Aves', 'Mammalia', 'Reptilia']),
+    classes: new Set(['Mammalia']),
     order:   '',
     family:  '',
     country: '',
@@ -907,6 +931,14 @@ function applyFilters() {
   if (state.activeTab === 'table')  renderTable();
   if (state.activeTab === 'refs')   renderRefs();
   document.getElementById('count-display').textContent = state.filteredRows.length.toLocaleString();
+  updateKeywordWarning();
+}
+
+// ── Keyword filter warning ─────────────────────────────────────────
+function updateKeywordWarning() {
+  const active = state.table.search !== '';
+  document.getElementById('keyword-filter-warning').style.display  = active ? '' : 'none';
+  document.getElementById('refs-keyword-warning').style.display = active ? '' : 'none';
 }
 
 // ── Stats ──────────────────────────────────────────────────────────
@@ -1655,13 +1687,16 @@ function bindEvents() {
     applyFilters();
   }, 300));
 
-  // Clear table search
-  document.getElementById('table-search-clear').addEventListener('click', () => {
+  // Clear table search (table panel button + warning banners)
+  function clearKeywordSearch() {
     state.table.search = '';
     document.getElementById('table-search').value = '';
     state.table.page = 1;
     applyFilters();
-  });
+  }
+  document.getElementById('table-search-clear').addEventListener('click', clearKeywordSearch);
+  document.getElementById('keyword-clear-sidebar').addEventListener('click', clearKeywordSearch);
+  document.getElementById('keyword-clear-refs').addEventListener('click', clearKeywordSearch);
 
   // Page size
   document.getElementById('page-size').addEventListener('change', e => {
@@ -1715,7 +1750,7 @@ function bindEvents() {
   // Reset
   document.getElementById('reset-btn').addEventListener('click', () => {
     state.filters.search  = '';
-    state.filters.classes = new Set(['Amphibia','Aves','Mammalia','Reptilia']);
+    state.filters.classes = new Set(['Mammalia']);
     state.filters.order   = '';
     state.filters.family  = '';
     state.filters.country = '';
@@ -1724,7 +1759,9 @@ function bindEvents() {
     document.getElementById('f-search').value  = '';
     document.getElementById('f-method').value  = '';
     document.getElementById('table-search').value = '';
-    document.querySelectorAll('input[type=checkbox][data-class]').forEach(cb => { cb.checked = true; });
+    document.querySelectorAll('input[type=checkbox][data-class]').forEach(cb => {
+      cb.checked = cb.dataset.class === 'Mammalia';
+    });
     updateHierarchicalDropdowns();
     // Reset year to full range
     const yminEl = document.getElementById('f-year-min');
