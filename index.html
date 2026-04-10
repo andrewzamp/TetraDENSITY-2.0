@@ -1919,7 +1919,9 @@ function initHeaderButtons() {
   }
 
   for (const [btnId, dropId] of Object.entries(toggleMap)) {
-    document.getElementById(btnId).addEventListener('click', e => {
+    const btn = document.getElementById(btnId);
+    if (!btn) continue;
+    btn.addEventListener('click', e => {
       e.stopPropagation();
       const drop = document.getElementById(dropId);
       const isOpen = drop.classList.contains('open');
@@ -1928,14 +1930,20 @@ function initHeaderButtons() {
     });
   }
 
-  // Close dropdowns on outside click
-  document.addEventListener('click', () => closeAllDropdowns());
-
   // Who's using TetraDENSITY? modal
   const whosModal    = document.getElementById('whos-using-modal');
   const whosCloseBtn = document.getElementById('whos-modal-close');
   const whosList     = document.getElementById('whos-modal-list');
   let whosLoaded = false;
+
+  // Close dropdowns on outside click or Escape key
+  document.addEventListener('click', () => closeAllDropdowns());
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeAllDropdowns();
+      whosModal.style.display = 'none';
+    }
+  });
 
   document.getElementById('btn-whos-using').addEventListener('click', e => {
     e.stopPropagation();
