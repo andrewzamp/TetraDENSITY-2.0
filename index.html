@@ -178,6 +178,17 @@
       text-align: center; transition: border-color .2s, color .2s;
     }
     #reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #filter-loading {
+      display: none; align-items: center; justify-content: center; gap: 8px;
+      color: var(--muted); font-size: .78rem; padding-top: 2px;
+    }
+    #filter-loading.active { display: flex; }
+    .filter-spinner {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      animation: filter-spin .8s linear infinite;
+    }
+    @keyframes filter-spin { to { transform: rotate(360deg); } }
     .record-count { text-align: center; color: var(--muted); font-size: .78rem; padding-top: 4px; }
     .record-count strong { color: var(--text); font-size: 1.1rem; display: block; }
 
@@ -585,6 +596,10 @@
       </div>
 
       <button id="reset-btn">Reset all filters</button>
+      <div id="filter-loading" aria-live="polite" aria-atomic="true">
+        <span class="filter-spinner" aria-hidden="true"></span>
+        <span>Applying filters…</span>
+      </div>
 
       <div class="record-count">
         <strong id="count-display">–</strong>
@@ -807,11 +822,30 @@ function safeParseFloat(v) { const n = parseFloat(v); return isNaN(n) ? null : n
 function debounce(fn, ms) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
+let filterRunToken = 0;
 
 // ── Loading helpers ──────────────────────────────────────────────────
 function setProgress(pct, msg) {
   document.getElementById('progress-fill').style.width = pct + '%';
   if (msg) document.getElementById('load-status').textContent = msg;
+}
+function setFilterLoading(isLoading) {
+  document.getElementById('filter-loading').classList.toggle('active', isLoading);
+}
+function runFilterUpdate(beforeApply) {
+  const token = ++filterRunToken;
+  setFilterLoading(true);
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      if (token !== filterRunToken) return;
+      try {
+        if (beforeApply) beforeApply();
+        applyFilters();
+      } finally {
+        if (token === filterRunToken) setFilterLoading(false);
+      }
+    }, 0);
+  });
 }
 
 // ── Load data ────────────────────────────────────────────────────────
@@ -1744,9 +1778,8 @@ function bindEvents() {
         state.filters.classes.delete(cls);
       }
       // Defer heavy computation one frame so the browser can repaint the checkbox first
-      requestAnimationFrame(() => {
+      runFilterUpdate(() => {
         updateHierarchicalDropdowns();
-        applyFilters();
       });
     });
   });
@@ -1754,22 +1787,20 @@ function bindEvents() {
   // Order dropdown – update family/country options before applying filters
   document.getElementById('f-order').addEventListener('change', e => {
     state.filters.order = e.target.value;
-    updateHierarchicalDropdowns();
-    applyFilters();
+    runFilterUpdate(() => updateHierarchicalDropdowns());
   });
 
   // Family dropdown – update country options before applying filters
   document.getElementById('f-family').addEventListener('change', e => {
     state.filters.family = e.target.value;
-    updateHierarchicalDropdowns();
-    applyFilters();
+    runFilterUpdate(() => updateHierarchicalDropdowns());
   });
 
   // Country, Method dropdowns
   ['f-country', 'f-method'].forEach(id => {
     document.getElementById(id).addEventListener('change', e => {
       state.filters[id.replace('f-', '')] = e.target.value;
-      applyFilters();
+      runFilterUpdate();
     });
   });
 
@@ -1777,7 +1808,7 @@ function bindEvents() {
   const applyYear = debounce(() => {
     state.filters.yearMin = parseInt(document.getElementById('f-year-min').value) || null;
     state.filters.yearMax = parseInt(document.getElementById('f-year-max').value) || null;
-    applyFilters();
+    runFilterUpdate();
   }, 400);
   document.getElementById('f-year-min').addEventListener('input', applyYear);
   document.getElementById('f-year-max').addEventListener('input', applyYear);
@@ -1785,14 +1816,14 @@ function bindEvents() {
   // Sidebar search
   document.getElementById('f-search').addEventListener('input', debounce(e => {
     state.filters.search = e.target.value;
-    applyFilters();
+    runFilterUpdate();
   }, 350));
 
   // Table/keyword search – now a primary filter (affects map, table, refs, stats)
   document.getElementById('table-search').addEventListener('input', debounce(e => {
     state.table.search = e.target.value;
     state.table.page = 1;
-    applyFilters();
+    runFilterUpdate();
   }, 300));
 
   // Clear table search (table panel button + warning banners)
@@ -1800,7 +1831,7 @@ function bindEvents() {
     state.table.search = '';
     document.getElementById('table-search').value = '';
     state.table.page = 1;
-    applyFilters();
+    runFilterUpdate();
   }
   document.getElementById('table-search-clear').addEventListener('click', clearKeywordSearch);
   document.getElementById('keyword-clear-sidebar').addEventListener('click', clearKeywordSearch);
@@ -1878,7 +1909,7 @@ function bindEvents() {
     state.filters.yearMax = parseInt(ymaxEl.max) || null;
     yminEl.value = yminEl.min;
     ymaxEl.value = ymaxEl.max;
-    applyFilters();
+    runFilterUpdate();
   });
 }
 
