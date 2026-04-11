@@ -180,7 +180,7 @@
     #reset-btn:hover { border-color: var(--accent); color: var(--accent); }
     #filter-loading {
       display: none; align-items: center; gap: 10px;
-      position: fixed; right: 16px; bottom: 16px; z-index: 1600;
+      position: absolute; left: 16px; top: 16px; z-index: 1600;
       color: var(--text); font-size: .82rem; font-weight: 600;
       padding: 10px 14px; border-radius: 10px;
       border: 1px solid var(--accent);
@@ -615,12 +615,6 @@
       </div>
 
       <button id="reset-btn">Reset all filters</button>
-      <div id="filter-loading" aria-live="polite" aria-atomic="true">
-        <span class="filter-spinner" aria-hidden="true"></span>
-        <span id="filter-loading-text">Applying filters…</span>
-        <span id="filter-loading-queue" aria-hidden="true"></span>
-      </div>
-
       <div class="record-count">
         <strong id="count-display">–</strong>
         records matching
@@ -655,6 +649,11 @@
       <!-- Map panel -->
       <div class="tab-panel active" id="tab-map">
         <div id="map"></div>
+      <div id="filter-loading" aria-live="polite" aria-atomic="true">
+        <span class="filter-spinner" aria-hidden="true"></span>
+        <span id="filter-loading-text">Applying filters…</span>
+        <span id="filter-loading-queue" aria-hidden="true"></span>
+      </div>
       <!-- Map info panel (appears on marker click) -->
       <div id="map-info-panel" role="complementary" aria-label="Record details">
         <div class="mip-header">
@@ -800,6 +799,7 @@ const state = {
   mapPopup: null,
   clusterLayer: null,
   markers: [],          // parallel to allRows for map
+  newEntryRows: [],
 };
 
 const CLASS_COLORS = {
@@ -821,6 +821,8 @@ const COLUMNS = [
   { key: 'Density',      label: 'Density' },
   { key: 'Density_unit', label: 'Unit' },
   { key: 'Method',       label: 'Method' },
+  { key: 'Method2',      label: 'Method2' },
+  { key: 'Notes_method', label: 'Notes_method' },
   { key: 'Ref_N',        label: 'Reference' },
   { key: 'Sampling_area',label: 'Area' },
   { key: 'X',            label: 'Lon' },
@@ -839,6 +841,9 @@ function fmt(n) {
   return n;
 }
 function safeParseFloat(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+function isNewEntryRow(r) {
+  return String((r && r.New_Entry) || '').trim().toUpperCase() === 'TRUE';
+}
 function debounce(fn, ms) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
@@ -945,6 +950,7 @@ function loadData() {
 
 // ── Initialise after data loaded ──────────────────────────────────────
 function init() {
+  state.newEntryRows = state.allRows.filter(isNewEntryRow);
   buildFilterOptions();
   setProgress(93, 'Initialising map…');
   setTimeout(() => {
@@ -975,6 +981,7 @@ function buildFilterOptions() {
   const years     = [];
 
   for (const r of state.allRows) {
+    if (isNewEntryRow(r)) continue;
     if (r.Method  && r.Method  !== 'NA') methods.add(r.Method);
     const y = parseInt(r.Year);
     if (!isNaN(y)) years.push(y);
@@ -1004,6 +1011,7 @@ function updateHierarchicalDropdowns() {
   // Pass 1: collect orders (filtered by active classes only)
   const orders = new Set();
   for (const r of state.allRows) {
+    if (isNewEntryRow(r)) continue;
     if (activeClasses.has(r.Class) && r.Order && r.Order !== 'NA') orders.add(r.Order);
   }
   const selOrder = document.getElementById('f-order');
@@ -1027,6 +1035,7 @@ function updateHierarchicalDropdowns() {
   const countriesAll    = new Set(); // countries matching class+order (no family filter)
   const countriesFamily = new Set(); // countries also matching family filter
   for (const r of state.allRows) {
+    if (isNewEntryRow(r)) continue;
     if (!activeClasses.has(r.Class)) continue;
     if (activeOrder && r.Order !== activeOrder) continue;
     if (r.Family && r.Family !== 'NA') families.add(r.Family);
@@ -1084,6 +1093,7 @@ function applyFilters() {
   const tsearch = state.table.search.toLowerCase();
 
   state.filteredRows = state.allRows.filter(r => {
+    if (isNewEntryRow(r)) return false;
     // Class
     if (!f.classes.has(r.Class)) return false;
     // Order
@@ -1216,7 +1226,7 @@ function updateMap() {
   const cluster = state.clusterLayer;
   cluster.clearLayers();
 
-  const rows = state.filteredRows;
+  const rows = [...state.filteredRows, ...state.newEntryRows];
   const limit = rows.length > MAP_MAX_MARKERS ? MAP_MAX_MARKERS : rows.length;
   const step  = rows.length > MAP_MAX_MARKERS ? Math.ceil(rows.length / MAP_MAX_MARKERS) : 1;
   let shown = 0;
@@ -1243,15 +1253,20 @@ function updateMap() {
     shown++;
   }
 
-  const note = rows.length > MAP_MAX_MARKERS
+  const pendingCount = state.newEntryRows.length;
+  const noteBase = rows.length > MAP_MAX_MARKERS
     ? `Showing ${shown.toLocaleString()} of ${rows.length.toLocaleString()} records (sampled)`
     : `Showing ${shown.toLocaleString()} records`;
+  const note = pendingCount
+    ? `${noteBase} · ${pendingCount.toLocaleString()} recent additions pending verification`
+    : noteBase;
   document.getElementById('map-count-note').textContent = note;
 }
 
 // ── Map info panel ─────────────────────────────────────────────────
 function showMapInfoPanel(r, latlng) {
   closeMapInfoPanel();
+  const isNewEntry = isNewEntryRow(r);
 
   const species = r.Species_COL || 'Unknown';
   const taxon   = [r.Class, r.Order, r.Family].filter(Boolean).join(' · ');
@@ -1259,15 +1274,21 @@ function showMapInfoPanel(r, latlng) {
     ? `${r.Density} ${r.Density_unit.replace('km2', 'km²')}`
     : 'N/A';
 
-  // Native removed; Density moved to the end (after Method2)
-  const fields = [
-    ['Country', r.Country || '–'],
-    ['Site',    r.Site    || '–'],
-    ['Year(s)', r.Year    || '–'],
-    ['Method',  r.Method  || '–'],
-    ['Density', density, true],
-  ];
-  if (r.Method2 && r.Method2 !== 'NA') fields.splice(4, 0, ['Method2', r.Method2]);
+  const fields = isNewEntry
+    ? [
+        ['Country', r.Country || '–'],
+        ['Site',    r.Site    || '–'],
+        ['Year(s)', r.Year    || '–'],
+      ]
+    : [
+        ['Country', r.Country || '–'],
+        ['Site',    r.Site    || '–'],
+        ['Year(s)', r.Year    || '–'],
+        ['Method',  r.Method  || '–'],
+        ['Method2', (r.Method2 && r.Method2 !== 'NA') ? r.Method2 : '–'],
+        ['Native',  (r.Native && r.Native !== 'NA') ? r.Native : '–'],
+        ['Density', density, true],
+      ];
 
   const html = `
     <div style="min-width:240px">
@@ -1287,12 +1308,16 @@ function showMapInfoPanel(r, latlng) {
         `).join('')}
       </div>
 
-      <div style="margin-top:10px">
-        <a href="#" id="popup-table-link"
-           style="display:block;text-align:center;padding:7px;background:var(--bg3);border:1px solid var(--accent);color:var(--accent);border-radius:var(--radius);font-size:.8rem;font-weight:600;text-decoration:none">
-          View in table →
-        </a>
-      </div>
+      ${isNewEntry
+        ? `<div style="margin-top:10px;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--accent2);background:color-mix(in srgb, var(--bg3) 86%, var(--accent2) 14%);color:var(--text);font-size:.78rem;line-height:1.4">
+             This entry is a recent addition; it will be soon verified and integrated in a future version of the database!
+           </div>`
+        : `<div style="margin-top:10px">
+             <a href="#" id="popup-table-link"
+                style="display:block;text-align:center;padding:7px;background:var(--bg3);border:1px solid var(--accent);color:var(--accent);border-radius:var(--radius);font-size:.8rem;font-weight:600;text-decoration:none">
+               View in table →
+             </a>
+           </div>`}
     </div>
   `;
 
@@ -1304,7 +1329,7 @@ function showMapInfoPanel(r, latlng) {
   // Wire link after popup DOM exists
   setTimeout(() => {
     const link = document.getElementById('popup-table-link');
-    if (link) {
+    if (link && !isNewEntry) {
       link.onclick = (e) => {
         e.preventDefault();
         closeMapInfoPanel();
