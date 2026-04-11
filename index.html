@@ -110,6 +110,10 @@
       font-weight: 800;
       line-height: 1;
       padding: 0;
+      color: var(--accent);
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 14%, var(--bg2));
+      box-shadow: inset 0 0 0 1px rgba(45, 212, 200, 0.24);
     }
 
     /* ── Who's using TetraDENSITY? modal ───────────────────────────── */
@@ -341,7 +345,6 @@
       #sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; z-index: 1200; transform: translateX(-100%); transition: transform .25s ease; }
       #sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.5); }
       #sidebar-overlay {
-        display: none;
         position: fixed;
         top: var(--header-h);
         left: 0;
@@ -563,7 +566,7 @@
     <button id="sidebar-toggle" title="Toggle filters">☰</button>
     <div class="brand">TetraDENSITY 2.0</div>
     <div class="tagline">Global Database of Tetrapod Population Density Estimates</div>
-    <button id="header-actions-toggle" class="gh-link hdr-info-btn" title="Open info menu" aria-label="Open info menu" aria-expanded="false">i</button>
+    <button id="header-actions-toggle" class="gh-link hdr-info-btn" aria-label="Open info menu" aria-expanded="false">i</button>
     <div id="header-actions">
       <!-- What is TetraDENSITY? toggle -->
       <div class="hdr-btn-wrap">
