@@ -862,11 +862,11 @@ function setFilterLoading(isLoading, queuedCount = 0) {
     queueEl.textContent = '';
   }
 }
-// `isRunning` tells whether the current filter update is already in progress:
+// `isAlreadyRunning` tells whether the current filter update is already in progress:
 // when true, every queued item is still pending; when false, one queued item
 // is about to start now, so only the remaining items are pending.
-function getPendingFilterCount(isRunning) {
-  return isRunning ? filterUpdateQueue.length : Math.max(filterUpdateQueue.length - 1, 0);
+function getPendingFilterCount(isAlreadyRunning) {
+  return isAlreadyRunning ? filterUpdateQueue.length : Math.max(filterUpdateQueue.length - 1, 0);
 }
 function runFilterUpdate(beforeApply) {
   filterUpdateQueue.push(beforeApply || null);
