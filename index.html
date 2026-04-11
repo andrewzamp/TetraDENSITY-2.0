@@ -765,7 +765,7 @@
 
       <!-- Search -->
       <div class="filter-group">
-        <label>Search by species / country / author</label>
+        <label>Search by scientific name / country / author</label>
         <input type="text" id="f-search" placeholder="e.g. Canis lupus…" />
       </div>
 
@@ -989,7 +989,7 @@ const state = {
     yearMax: null,
   },
   densityUnit:  'ind/km2',  // 'ind/ha' or 'ind/km2'
-  densityScale: 'log',      // 'log' or 'linear'
+  densityScale: 'log',      // 'log' or natural scale
   activeTab:    'map',      // currently visible main tab
   table: {
     page:     1,
@@ -1689,7 +1689,7 @@ function updateCharts() {
     .filter(v => v !== null && v > 0);
   const bins = scale === 'log' ? logBins(densVals, 15) : linearBins(densVals, 15);
   const unitLabel = targetUnit === 'ind/ha' ? 'ind/ha' : 'ind/km²';
-  const scaleLabel = scale === 'log' ? 'log₁₀ scale' : 'linear scale';
+  const scaleLabel = scale === 'log' ? 'log₁₀ scale' : 'natural scale';
   document.getElementById('density-chart-title').textContent =
     `Density distribution (${unitLabel}, ${scaleLabel})`;
   mkChart('chart-density', 'bar', {
@@ -1738,9 +1738,8 @@ function logBins(vals, n) {
     if (bi >= 0) counts[bi]++;
   }
   const labels = edges.slice(0,-1).map((e,i) => {
-    const lo = Math.pow(10, e), hi = Math.pow(10, edges[i+1]);
-    return lo < 1 ? lo.toFixed(3) + '–' + hi.toFixed(2)
-                  : Math.round(lo) + '–' + Math.round(hi);
+    const lo = e, hi = edges[i + 1];
+    return lo.toFixed(2) + '–' + hi.toFixed(2);
   });
   return { labels, counts };
 }
@@ -1748,16 +1747,11 @@ function logBins(vals, n) {
 function linearBins(vals, n) {
   if (!vals.length) return { labels: [], counts: [] };
   const sorted = [...vals].sort((a,b) => a - b);
-  // Use 99th percentile as upper bound to avoid extreme outlier stretching
-  // (density data can span many orders of magnitude; without this cap the
-  //  bins would be so wide that the interesting range becomes invisible)
-  const p99 = sorted[Math.floor(sorted.length * 0.99)] || sorted[sorted.length - 1];
-  const mn = 0, mx = p99;
+  const mn = 0, mx = sorted[sorted.length - 1];
   if (mx === 0) return { labels: [], counts: [] };
   const step = mx / n;
   const counts = new Array(n).fill(0);
   for (const v of sorted) {
-    if (v > mx) continue;
     const bi = Math.min(Math.floor(v / step), n - 1);
     if (bi >= 0) counts[bi]++;
   }
@@ -2200,7 +2194,7 @@ function bindEvents() {
   document.getElementById('density-scale-toggle').addEventListener('click', () => {
     state.densityScale = state.densityScale === 'log' ? 'linear' : 'log';
     const btn = document.getElementById('density-scale-toggle');
-    btn.textContent = state.densityScale === 'log' ? 'log₁₀' : 'linear';
+    btn.textContent = state.densityScale === 'log' ? 'log₁₀' : 'natural';
     updateCharts();
   });
 
