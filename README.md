@@ -132,5 +132,5 @@ The data are made available for academic and non-commercial use. Please refer to
 ---
 
 <div align="center">
-  <sub>Built and maintained by Andrea Zampetti and contributors · Powered by [GitHub Pages](https://pages.github.com/)</sub>
+  <sub>Built and maintained by Andrea Zampetti and contributors · Powered by <a href="https://pages.github.com/">GitHub Pages</a> and <a href="https://github.com/features/copilot/">GitHub Copilot</a></sub>
 </div>
