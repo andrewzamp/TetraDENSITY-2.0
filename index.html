@@ -903,7 +903,7 @@ function loadData() {
   setProgress(5, 'Loading database CSV\u2026');
 
   // Load refs first (small file)
-  Papa.parse('data/TetraDENSITY_2.0_References.csv', {
+  Papa.parse('data/TetraDENSITY_2.1_References.csv', {
     download: true, header: true, skipEmptyLines: true,
     complete(result) {
       console.log('References loaded:', result.data.length, 'rows');
@@ -921,7 +921,7 @@ function loadData() {
   });
 
   // Load main database (large file)
-  Papa.parse('data/TetraDENSITY_2.0_Database.csv', {
+  Papa.parse('data/TetraDENSITY_2.1_Database.csv', {
     download: true, header: true, skipEmptyLines: true,
     step(result, parser) {
       // progress estimation based on bytes not available; approximate by rows
