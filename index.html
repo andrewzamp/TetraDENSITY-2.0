@@ -862,13 +862,16 @@ function setFilterLoading(isLoading, queuedCount = 0) {
     queueEl.textContent = '';
   }
 }
-function getQueuedCountForDisplay(isRunning) {
+// `isRunning` tells whether the current filter update is already in progress:
+// when true, every queued item is still pending; when false, one queued item
+// is about to start now, so only the remaining items are pending.
+function getPendingFilterCount(isRunning) {
   return isRunning ? filterUpdateQueue.length : Math.max(filterUpdateQueue.length - 1, 0);
 }
 function runFilterUpdate(beforeApply) {
   filterUpdateQueue.push(beforeApply || null);
   if (isFilterUpdateRunning) {
-    setFilterLoading(true, getQueuedCountForDisplay(true));
+    setFilterLoading(true, getPendingFilterCount(true));
     return;
   }
   processNextFilterUpdate();
@@ -880,7 +883,7 @@ function processNextFilterUpdate() {
     return;
   }
   isFilterUpdateRunning = true;
-  setFilterLoading(true, getQueuedCountForDisplay(false));
+  setFilterLoading(true, getPendingFilterCount(false));
   const beforeApply = filterUpdateQueue.shift();
   requestAnimationFrame(() => {
     setTimeout(() => {
@@ -888,10 +891,8 @@ function processNextFilterUpdate() {
         if (beforeApply) beforeApply();
         applyFilters();
       } finally {
-        setTimeout(() => {
-          isFilterUpdateRunning = false;
-          processNextFilterUpdate();
-        }, 0);
+        isFilterUpdateRunning = false;
+        processNextFilterUpdate();
       }
     }, 0);
   });
