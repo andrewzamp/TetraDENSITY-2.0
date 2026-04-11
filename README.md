@@ -15,7 +15,7 @@
 
 > **👉 [TetraDENSITY 2.0 web app](https://andrewzamp.github.io/TetraDENSITY-2.0/)**
 
-Filter, map, and download population density records for over **3,900 tetrapod species** across the globe. No installation required, straight in your browser.
+Filter, map, and download population density records for over **3,700 tetrapod species** across the globe. No installation required, straight in your browser.
 
 ![TetraDENSITY web application](assets/TetraDENSITY_web_app.png)
 *Figure 1. The TetraDENSITY interactive web application, allowing users to filter, map, and download tetrapod population density records directly in the browser.*
