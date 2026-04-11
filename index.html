@@ -1173,10 +1173,11 @@ function rowMatchesActiveFilters(r, includeNewEntries = false, search = '', tsea
   const y = parseInt(r.Year);
   if (f.yearMin && !isNaN(y) && y < f.yearMin) return false;
   if (f.yearMax && !isNaN(y) && y > f.yearMax) return false;
-  // Sidebar search (species / site / country)
+  // Sidebar search (species / site / country / author)
   if (search) {
-    const hay = ((r.Species_COL||'') + (r.Site||'') + (r.Country||'')).toLowerCase();
-    if (!hay.includes(search)) return false;
+    const rowHay = ((r.Species_COL||'') + ' ' + (r.Site||'') + ' ' + (r.Country||'') + ' ' + (r.Collector||'')).toLowerCase();
+    const refHay = state.refTextMap.get(r.Ref_N) || '';
+    if (!rowHay.includes(search) && !refHay.includes(search)) return false;
   }
   // Table/keyword search – searches row fields AND reference text (author name etc.)
   if (tsearch) {
