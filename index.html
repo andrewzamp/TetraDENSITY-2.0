@@ -596,7 +596,8 @@
       <div class="hdr-btn-wrap">
         <button class="gh-link" id="btn-report-error">Report an issue or contribute</button>
         <div class="hdr-dropdown" id="drop-report-error">
-         Did you spot an error in the data? Do you want to contribute with new records? Do you have a question or suggestion about the database or this web app?
+         Did you spot an error in the data? Do you want to contribute with new records?<br />
+         Do you have a question or suggestion about the database or this web app?
           <a href="https://github.com/andrewzamp/TetraDENSITY-2.0/issues/new/choose" target="_blank" rel="noopener">→ Click here</a>
           to fill out an issue and help us improve the platform!
         </div>
@@ -1909,6 +1910,8 @@ function bindEvents() {
   // Sidebar toggle (mobile)
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
+  const headerActions = document.getElementById('header-actions');
+  const headerActionsToggle = document.getElementById('header-actions-toggle');
   function setSidebarOpen(isOpen) {
     sidebar.classList.toggle('open', isOpen);
     sidebarOverlay.classList.toggle('open', isOpen);
@@ -1917,9 +1920,14 @@ function bindEvents() {
     setSidebarOpen(!sidebar.classList.contains('open'));
   });
   sidebarOverlay.addEventListener('click', () => setSidebarOpen(false));
-  window.addEventListener('resize', () => {
-    if (window.innerWidth > 680) setSidebarOpen(false);
-  });
+  const handleLayoutResize = debounce(() => {
+    if (window.innerWidth > 680) {
+      setSidebarOpen(false);
+      headerActions.classList.remove('open');
+      headerActionsToggle.setAttribute('aria-expanded', 'false');
+    }
+  }, 120);
+  window.addEventListener('resize', handleLayoutResize);
 
   // Class checkboxes – update hierarchical dropdowns before applying filters
   document.querySelectorAll('input[type=checkbox][data-class]').forEach(cb => {
@@ -2195,9 +2203,6 @@ function initHeaderButtons() {
   whosCloseBtn.addEventListener('click', () => { whosModal.style.display = 'none'; });
   whosModal.addEventListener('click', e => {
     if (e.target === whosModal) whosModal.style.display = 'none';
-  });
-  window.addEventListener('resize', () => {
-    if (window.innerWidth > 680) closeHeaderActionsMenu();
   });
 }
 
