@@ -53,6 +53,7 @@
     header {
       height: var(--header-h); background: var(--bg2); border-bottom: 1px solid var(--border);
       display: flex; align-items: center; padding: 0 20px; gap: 16px; flex-shrink: 0;
+      position: relative; z-index: 1300;
     }
     header .brand { font-weight: 800; font-size: 1.35rem; color: var(--accent); letter-spacing: -.5px; white-space: nowrap; }
     header .tagline { color: var(--muted); font-size: .93rem; flex: 1; }
@@ -92,6 +93,23 @@
       width: 28px; height: 28px; padding: 0;
       display: inline-flex; align-items: center; justify-content: center;
       border-radius: 50%; font-weight: 700; font-size: .95rem;
+    }
+    #header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+    #header-actions-toggle {
+      display: none;
+      margin-left: auto;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1;
+      padding: 0;
     }
 
     /* ── Who's using TetraDENSITY? modal ───────────────────────────── */
@@ -138,6 +156,7 @@
       display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; padding: 16px;
       gap: 16px;
     }
+    #sidebar-overlay { display: none; }
     #sidebar h3 { font-size: .7rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
     .filter-group { display: flex; flex-direction: column; gap: 6px; }
     .filter-group label { font-size: .8rem; color: var(--muted); }
@@ -319,10 +338,54 @@
       #charts-panel { grid-template-columns: 1fr; }
     }
     @media (max-width: 680px) {
-      #sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; z-index: 1000; transform: translateX(-100%); transition: transform .25s ease; }
+      #sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; z-index: 1200; transform: translateX(-100%); transition: transform .25s ease; }
       #sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.5); }
+      #sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: var(--header-h);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,.42);
+        z-index: 1150;
+      }
+      #sidebar-overlay.open { display: block; }
       #sidebar-toggle { display: block; }
       header .tagline { display: none; }
+      #header-actions-toggle { display: inline-flex; }
+      #header-actions {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 8px;
+        width: min(300px, calc(100vw - 16px));
+        max-height: calc(100vh - var(--header-h) - 20px);
+        overflow-y: auto;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: 0 10px 28px rgba(0,0,0,.55);
+        z-index: 1250;
+      }
+      #header-actions.open { display: flex; }
+      #header-actions .hdr-btn-wrap { width: 100%; }
+      #header-actions .gh-link {
+        width: 100%;
+        text-align: left;
+      }
+      #header-actions .hdr-dropdown {
+        position: relative;
+        top: auto;
+        right: auto;
+        width: 100%;
+        max-width: none;
+        margin-top: 4px;
+      }
     }
 
     /* ── Scrollbar ────────────────────────────────────────────────── */
@@ -500,42 +563,46 @@
     <button id="sidebar-toggle" title="Toggle filters">☰</button>
     <div class="brand">TetraDENSITY 2.0</div>
     <div class="tagline">Global Database of Tetrapod Population Density Estimates</div>
-    <!-- What is TetraDENSITY? toggle -->
-    <div class="hdr-btn-wrap">
-      <button class="gh-link" id="btn-what">What is TetraDENSITY?</button>
-      <div class="hdr-dropdown" id="drop-what">
-        TetraDENSITY is an open database of empirical population density estimates for the four
-        tetrapod classes: amphibians, reptiles, birds, and mammals. It compiles density estimates
-        from the primary scientific literature into a single, harmonised resource, enabling researchers
-        to ask large-scale questions about how animal populations vary across species, habitats, and
-        the planet.
+    <button id="header-actions-toggle" class="gh-link hdr-info-btn" title="Open info menu" aria-label="Open info menu" aria-expanded="false">i</button>
+    <div id="header-actions">
+      <!-- What is TetraDENSITY? toggle -->
+      <div class="hdr-btn-wrap">
+        <button class="gh-link" id="btn-what">What is TetraDENSITY?</button>
+        <div class="hdr-dropdown" id="drop-what">
+          TetraDENSITY is an open database of empirical population density estimates for the four
+          tetrapod classes: amphibians, reptiles, birds, and mammals. It compiles density estimates
+          from the primary scientific literature into a single, harmonised resource, enabling researchers
+          to ask large-scale questions about how animal populations vary across species, habitats, and
+          the planet.
+        </div>
       </div>
-    </div>
-    <!-- Who's using TetraDENSITY? -->
-    <button class="gh-link" id="btn-whos-using">Who's using TetraDENSITY?</button>
-    <!-- How to cite toggle -->
-    <div class="hdr-btn-wrap">
-      <button class="gh-link" id="btn-cite">How to cite</button>
-      <div class="hdr-dropdown" id="drop-cite">
-        Santini, L., Mendez Angarita, V. Y., Karoulis, C., Fundarò, D., Pranzini, N., Vivaldi, C.,
-        Zhang, T., Zampetti, A., Gargano, S. J., Mirante, D., &amp; Paltrinieri, L. (2024).
-        TetraDENSITY 2.0—A database of population density estimates in TetraPods.
-        <em>Global Ecology and Biogeography, 33</em>(12).
-        <a href="https://doi.org/10.1111/geb.13929" target="_blank" rel="noopener">https://doi.org/10.1111/geb.13929</a>
+      <!-- Who's using TetraDENSITY? -->
+      <button class="gh-link" id="btn-whos-using">Who's using TetraDENSITY?</button>
+      <!-- How to cite toggle -->
+      <div class="hdr-btn-wrap">
+        <button class="gh-link" id="btn-cite">How to cite</button>
+        <div class="hdr-dropdown" id="drop-cite">
+          Santini, L., Mendez Angarita, V. Y., Karoulis, C., Fundarò, D., Pranzini, N., Vivaldi, C.,
+          Zhang, T., Zampetti, A., Gargano, S. J., Mirante, D., &amp; Paltrinieri, L. (2024).
+          TetraDENSITY 2.0—A database of population density estimates in TetraPods.
+          <em>Global Ecology and Biogeography, 33</em>(12).
+          <a href="https://doi.org/10.1111/geb.13929" target="_blank" rel="noopener">https://doi.org/10.1111/geb.13929</a>
+        </div>
       </div>
-    </div>
-    <!-- Did you spot an error? toggle -->
-    <div class="hdr-btn-wrap">
-      <button class="gh-link" id="btn-report-error">Report an issue or contribute</button>
-      <div class="hdr-dropdown" id="drop-report-error">
-       Did you spot an error in the data? Do you want to contribute with new records? 
-       Do you have a question or suggestion about the database or this web app?
-        <a href="https://github.com/andrewzamp/TetraDENSITY-2.0/issues/new/choose" target="_blank" rel="noopener">→ Click here</a>
-        to fill out an issue and help us improve the platform!
+      <!-- Did you spot an error? toggle -->
+      <div class="hdr-btn-wrap">
+        <button class="gh-link" id="btn-report-error">Report an issue or contribute</button>
+        <div class="hdr-dropdown" id="drop-report-error">
+         Did you spot an error in the data? Do you want to contribute with new records? 
+         Do you have a question or suggestion about the database or this web app?
+          <a href="https://github.com/andrewzamp/TetraDENSITY-2.0/issues/new/choose" target="_blank" rel="noopener">→ Click here</a>
+          to fill out an issue and help us improve the platform!
+        </div>
       </div>
+      <a class="gh-link" href="https://github.com/andrewzamp/TetraDENSITY" target="_blank" rel="noopener">Learn more</a>
     </div>
-    <a class="gh-link" href="https://github.com/andrewzamp/TetraDENSITY" target="_blank" rel="noopener">Learn more</a>
   </header>
+  <div id="sidebar-overlay" aria-hidden="true"></div>
 
   <!-- Who's using TetraDENSITY? modal -->
   <div id="whos-using-modal" style="display:none;" role="dialog" aria-modal="true" aria-label="Who's using TetraDENSITY?">
@@ -1838,8 +1905,18 @@ function bindEvents() {
   });
 
   // Sidebar toggle (mobile)
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
+  function setSidebarOpen(isOpen) {
+    sidebar.classList.toggle('open', isOpen);
+    sidebarOverlay.classList.toggle('open', isOpen);
+  }
   document.getElementById('sidebar-toggle').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('open');
+    setSidebarOpen(!sidebar.classList.contains('open'));
+  });
+  sidebarOverlay.addEventListener('click', () => setSidebarOpen(false));
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 680) setSidebarOpen(false);
   });
 
   // Class checkboxes – update hierarchical dropdowns before applying filters
@@ -2036,9 +2113,15 @@ function initHeaderButtons() {
     'btn-cite':  'drop-cite',
     'btn-report-error': 'drop-report-error',
   };
+  const headerActions = document.getElementById('header-actions');
+  const headerActionsToggle = document.getElementById('header-actions-toggle');
 
   function closeAllDropdowns() {
     document.querySelectorAll('.hdr-dropdown').forEach(d => d.classList.remove('open'));
+  }
+  function closeHeaderActionsMenu() {
+    headerActions.classList.remove('open');
+    headerActionsToggle.setAttribute('aria-expanded', 'false');
   }
 
   for (const [btnId, dropId] of Object.entries(toggleMap)) {
@@ -2053,6 +2136,16 @@ function initHeaderButtons() {
     });
   }
 
+  headerActionsToggle.addEventListener('click', e => {
+    e.stopPropagation();
+    const isOpen = headerActions.classList.contains('open');
+    if (isOpen) closeHeaderActionsMenu();
+    else {
+      headerActions.classList.add('open');
+      headerActionsToggle.setAttribute('aria-expanded', 'true');
+    }
+  });
+
   // Who's using TetraDENSITY? modal
   const whosModal    = document.getElementById('whos-using-modal');
   const whosCloseBtn = document.getElementById('whos-modal-close');
@@ -2060,10 +2153,14 @@ function initHeaderButtons() {
   let whosLoaded = false;
 
   // Close dropdowns on outside click or Escape key
-  document.addEventListener('click', () => closeAllDropdowns());
+  document.addEventListener('click', () => {
+    closeAllDropdowns();
+    closeHeaderActionsMenu();
+  });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       closeAllDropdowns();
+      closeHeaderActionsMenu();
       whosModal.style.display = 'none';
     }
   });
@@ -2071,6 +2168,7 @@ function initHeaderButtons() {
   document.getElementById('btn-whos-using').addEventListener('click', e => {
     e.stopPropagation();
     closeAllDropdowns();
+    closeHeaderActionsMenu();
     whosModal.style.display = 'flex';
     if (!whosLoaded) {
       whosLoaded = true;
@@ -2095,6 +2193,9 @@ function initHeaderButtons() {
   whosCloseBtn.addEventListener('click', () => { whosModal.style.display = 'none'; });
   whosModal.addEventListener('click', e => {
     if (e.target === whosModal) whosModal.style.display = 'none';
+  });
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 680) closeHeaderActionsMenu();
   });
 }
 
