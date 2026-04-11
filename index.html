@@ -1086,41 +1086,42 @@ function populate(id, values) {
   });
 }
 
+function rowMatchesActiveFilters(r, includeNewEntries = false, search = '', tsearch = '') {
+  const f = state.filters;
+  if (!includeNewEntries && isNewEntryRow(r)) return false;
+  // Class
+  if (!f.classes.has(r.Class)) return false;
+  // Order
+  if (f.order && r.Order !== f.order) return false;
+  // Family
+  if (f.family && r.Family !== f.family) return false;
+  // Country
+  if (f.country && r.Country !== f.country) return false;
+  // Method
+  if (f.method && r.Method !== f.method) return false;
+  // Year
+  const y = parseInt(r.Year);
+  if (f.yearMin && !isNaN(y) && y < f.yearMin) return false;
+  if (f.yearMax && !isNaN(y) && y > f.yearMax) return false;
+  // Sidebar search (species / site / country)
+  if (search) {
+    const hay = ((r.Species_COL||'') + (r.Site||'') + (r.Country||'')).toLowerCase();
+    if (!hay.includes(search)) return false;
+  }
+  // Table/keyword search – searches row fields AND reference text (author name etc.)
+  if (tsearch) {
+    const rowHay = COLUMNS.map(c => r[c.key] || '').join(' ').toLowerCase();
+    const refHay = state.refTextMap.get(r.Ref_N) || '';
+    if (!rowHay.includes(tsearch) && !refHay.includes(tsearch)) return false;
+  }
+  return true;
+}
+
 // ── Apply filters ──────────────────────────────────────────────────
 function applyFilters() {
-  const f = state.filters;
-  const search  = f.search.toLowerCase();
+  const search  = state.filters.search.toLowerCase();
   const tsearch = state.table.search.toLowerCase();
-
-  state.filteredRows = state.allRows.filter(r => {
-    if (isNewEntryRow(r)) return false;
-    // Class
-    if (!f.classes.has(r.Class)) return false;
-    // Order
-    if (f.order && r.Order !== f.order) return false;
-    // Family
-    if (f.family && r.Family !== f.family) return false;
-    // Country
-    if (f.country && r.Country !== f.country) return false;
-    // Method
-    if (f.method && r.Method !== f.method) return false;
-    // Year
-    const y = parseInt(r.Year);
-    if (f.yearMin && !isNaN(y) && y < f.yearMin) return false;
-    if (f.yearMax && !isNaN(y) && y > f.yearMax) return false;
-    // Sidebar search (species / site / country)
-    if (search) {
-      const hay = ((r.Species_COL||'') + (r.Site||'') + (r.Country||'')).toLowerCase();
-      if (!hay.includes(search)) return false;
-    }
-    // Table/keyword search – searches row fields AND reference text (author name etc.)
-    if (tsearch) {
-      const rowHay = COLUMNS.map(c => r[c.key] || '').join(' ').toLowerCase();
-      const refHay = state.refTextMap.get(r.Ref_N) || '';
-      if (!rowHay.includes(tsearch) && !refHay.includes(tsearch)) return false;
-    }
-    return true;
-  });
+  state.filteredRows = state.allRows.filter(r => rowMatchesActiveFilters(r, false, search, tsearch));
 
   // Clear row highlight when filters change
   state.table.highlightRow = null;
@@ -1226,7 +1227,10 @@ function updateMap() {
   const cluster = state.clusterLayer;
   cluster.clearLayers();
 
-  const rows = [...state.filteredRows, ...state.newEntryRows];
+  const search  = state.filters.search.toLowerCase();
+  const tsearch = state.table.search.toLowerCase();
+  const filteredNewEntryRows = state.newEntryRows.filter(r => rowMatchesActiveFilters(r, true, search, tsearch));
+  const rows = [...state.filteredRows, ...filteredNewEntryRows];
   const limit = rows.length > MAP_MAX_MARKERS ? MAP_MAX_MARKERS : rows.length;
   const step  = rows.length > MAP_MAX_MARKERS ? Math.ceil(rows.length / MAP_MAX_MARKERS) : 1;
   let shown = 0;
@@ -1253,7 +1257,7 @@ function updateMap() {
     shown++;
   }
 
-  const pendingCount = state.newEntryRows.length;
+  const pendingCount = filteredNewEntryRows.length;
   const noteBase = rows.length > MAP_MAX_MARKERS
     ? `Showing ${shown.toLocaleString()} of ${rows.length.toLocaleString()} records (sampled)`
     : `Showing ${shown.toLocaleString()} records`;
