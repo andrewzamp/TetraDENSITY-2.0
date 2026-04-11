@@ -345,14 +345,8 @@
       background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius);
       padding: 10px 16px; white-space: nowrap; min-width: 130px;
     }
-    .density-stat-card { min-width: 220px; }
     .stat-card .val { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
     .stat-card .lbl { font-size: .72rem; color: var(--muted); margin-top: 2px; }
-    #s-density-range {
-      white-space: normal;
-      overflow-wrap: anywhere;
-      line-height: 1.25;
-    }
 
     /* tabs */
     #tab-bar {
@@ -494,7 +488,6 @@
         max-width: none;
         margin-top: 4px;
       }
-      .density-stat-card { min-width: 250px; }
     }
 
     /* ── Scrollbar ────────────────────────────────────────────────── */
@@ -847,7 +840,7 @@
         <div class="stat-card"><div class="val" id="s-species">–</div><div class="lbl">Unique species</div></div>
         <div class="stat-card"><div class="val" id="s-countries">–</div><div class="lbl">Countries</div></div>
         <div class="stat-card"><div class="val" id="s-years">–</div><div class="lbl">Year range</div></div>
-        <div class="stat-card density-stat-card"><div class="val" id="s-density-med">–</div><div class="lbl" id="s-density-lbl">Median density (ind/km²)</div><div class="lbl" id="s-density-range" style="font-size:.65rem;margin-top:2px;color:var(--muted)"></div></div>
+        <div class="stat-card"><div class="val" id="s-density-med">–</div><div class="lbl" id="s-density-lbl">Median density (ind/km²)</div><div class="lbl" id="s-density-range" style="font-size:.65rem;margin-top:2px;color:var(--muted)"></div></div>
       </div>
 
       <!-- Tab bar -->
@@ -1365,9 +1358,12 @@ function updateStats() {
   const countries = new Set(rows.map(r => r.Country)).size;
   const years     = rows.map(r => parseInt(r.Year)).filter(y => !isNaN(y));
 
-  // Convert all densities to the current display unit (same path used by charts)
+  // Convert all densities to the current display unit (mirrors the density chart logic)
   const targetUnit = state.densityUnit;
-  const densities = getConvertedDensityValues(rows, targetUnit).sort((a, b) => a - b);
+  const densities = rows
+    .map(r => toDensityUnit(r.Density, r.Density_unit, targetUnit))
+    .filter(v => v !== null && v > 0)
+    .sort((a, b) => a - b);
   const med = densities.length
     ? densities[Math.floor(densities.length / 2)].toFixed(2)
     : '–';
@@ -1674,7 +1670,9 @@ function updateCharts() {
   // ── Density histogram (with unit conversion and scale toggle)
   const targetUnit = state.densityUnit;
   const scale      = state.densityScale;
-  const densVals = getConvertedDensityValues(rows, targetUnit);
+  const densVals = rows
+    .map(r => toDensityUnit(r.Density, r.Density_unit, targetUnit))
+    .filter(v => v !== null && v > 0);
   const bins = scale === 'log' ? logBins(densVals, 15) : linearBins(densVals, 15);
   const unitLabel = targetUnit === 'ind/ha' ? 'ind/ha' : 'ind/km²';
   const scaleLabel = scale === 'log' ? 'log₁₀ scale' : 'linear scale';
@@ -1717,12 +1715,6 @@ function logBins(vals, n) {
   if (!vals.length) return { labels: [], counts: [] };
   const mn = Math.log10(Math.min(...vals) || 0.001);
   const mx = Math.log10(Math.max(...vals));
-  if (mx <= mn) {
-    return {
-      labels: [formatDensityValue(vals[0]) + '–' + formatDensityValue(vals[0])],
-      counts: [vals.length],
-    };
-  }
   const step = (mx - mn) / n;
   const edges = Array.from({length: n+1}, (_, i) => mn + i * step);
   const counts = new Array(n).fill(0);
@@ -1733,44 +1725,34 @@ function logBins(vals, n) {
   }
   const labels = edges.slice(0,-1).map((e,i) => {
     const lo = Math.pow(10, e), hi = Math.pow(10, edges[i+1]);
-    return formatDensityValue(lo) + '–' + formatDensityValue(hi);
+    return lo < 1 ? lo.toFixed(3) + '–' + hi.toFixed(2)
+                  : Math.round(lo) + '–' + Math.round(hi);
   });
   return { labels, counts };
 }
 
 function linearBins(vals, n) {
   if (!vals.length) return { labels: [], counts: [] };
-  const mn = 0;
-  const mx = Math.max(...vals);
+  const sorted = [...vals].sort((a,b) => a - b);
+  // Use 99th percentile as upper bound to avoid extreme outlier stretching
+  // (density data can span many orders of magnitude; without this cap the
+  //  bins would be so wide that the interesting range becomes invisible)
+  const p99 = sorted[Math.floor(sorted.length * 0.99)] || sorted[sorted.length - 1];
+  const mn = 0, mx = p99;
   if (mx === 0) return { labels: [], counts: [] };
   const step = mx / n;
   const counts = new Array(n).fill(0);
-  for (const v of vals) {
+  for (const v of sorted) {
+    if (v > mx) continue;
     const bi = Math.min(Math.floor(v / step), n - 1);
     if (bi >= 0) counts[bi]++;
   }
   const labels = Array.from({length: n}, (_, i) => {
     const lo = i * step, hi = lo + step;
-    return formatDensityValue(lo) + '–' + formatDensityValue(hi);
+    const fmt = v => v < 1 ? v.toFixed(3) : v < 100 ? v.toFixed(1) : Math.round(v).toLocaleString();
+    return fmt(lo) + '–' + fmt(hi);
   });
   return { labels, counts };
-}
-
-function formatDensityValue(v) {
-  if (!Number.isFinite(v)) return '0';
-  if (v === 0) return '0';
-  if (v < 1e-3) return v.toExponential(1).replace('+', '');
-  if (v < 1) return v.toPrecision(2);
-  if (v < 10) return v.toFixed(2);
-  if (v < 1000) return v.toFixed(0);
-  if (v < 1e6) return Math.round(v).toLocaleString();
-  return v.toExponential(2).replace('+', '');
-}
-
-function getConvertedDensityValues(rows, targetUnit) {
-  return rows
-    .map(r => toDensityUnit(r.Density, r.Density_unit, targetUnit))
-    .filter(v => v !== null && v > 0);
 }
 
 // Convert a density value from its source unit to the target display unit.
@@ -1780,10 +1762,9 @@ function getConvertedDensityValues(rows, targetUnit) {
 function toDensityUnit(density, sourceUnit, targetUnit) {
   const v = parseFloat(density);
   if (isNaN(v) || v <= 0) return null;
-  const unit = String(sourceUnit || '').trim().toLowerCase().replace('km²', 'km2');
   // Normalise to ind/km² first
   let perKm2;
-  switch (unit) {
+  switch (sourceUnit) {
     case 'ind/ha':    perKm2 = v * 100;   break;
     case 'males/ha':  perKm2 = v * 100;   break;
     case 'ind/km2':   perKm2 = v;         break;
