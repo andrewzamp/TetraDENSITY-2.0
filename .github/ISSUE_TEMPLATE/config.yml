@@ -1,8 +1,1 @@
 blank_issues_enabled: false
-contact_links:
-  - name: TetraDENSITY 2.0 web app
-    url: https://andrewzamp.github.io/TetraDENSITY-2.0/
-    about: Explore filters, map, charts, and downloadable data.
-  - name: Citation and project overview
-    url: https://github.com/andrewzamp/TetraDENSITY-2.0#readme
-    about: Read project details, data scope, and citation guidance.
