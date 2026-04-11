@@ -1910,8 +1910,8 @@ function bindEvents() {
   // Sidebar toggle (mobile)
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
-  const headerActions = document.getElementById('header-actions');
-  const headerActionsToggle = document.getElementById('header-actions-toggle');
+  const headerMenu = document.getElementById('header-actions');
+  const headerMenuToggle = document.getElementById('header-actions-toggle');
   function setSidebarOpen(isOpen) {
     sidebar.classList.toggle('open', isOpen);
     sidebarOverlay.classList.toggle('open', isOpen);
@@ -1923,8 +1923,8 @@ function bindEvents() {
   const handleLayoutResize = debounce(() => {
     if (window.innerWidth > 680) {
       setSidebarOpen(false);
-      headerActions.classList.remove('open');
-      headerActionsToggle.setAttribute('aria-expanded', 'false');
+      headerMenu.classList.remove('open');
+      headerMenuToggle.setAttribute('aria-expanded', 'false');
     }
   }, 120);
   window.addEventListener('resize', handleLayoutResize);
@@ -2123,15 +2123,15 @@ function initHeaderButtons() {
     'btn-cite':  'drop-cite',
     'btn-report-error': 'drop-report-error',
   };
-  const headerActions = document.getElementById('header-actions');
-  const headerActionsToggle = document.getElementById('header-actions-toggle');
+  const headerActionsMenu = document.getElementById('header-actions');
+  const headerActionsMenuToggle = document.getElementById('header-actions-toggle');
 
   function closeAllDropdowns() {
     document.querySelectorAll('.hdr-dropdown').forEach(d => d.classList.remove('open'));
   }
   function closeHeaderActionsMenu() {
-    headerActions.classList.remove('open');
-    headerActionsToggle.setAttribute('aria-expanded', 'false');
+    headerActionsMenu.classList.remove('open');
+    headerActionsMenuToggle.setAttribute('aria-expanded', 'false');
   }
 
   for (const [btnId, dropId] of Object.entries(toggleMap)) {
@@ -2146,13 +2146,13 @@ function initHeaderButtons() {
     });
   }
 
-  headerActionsToggle.addEventListener('click', e => {
+  headerActionsMenuToggle.addEventListener('click', e => {
     e.stopPropagation();
-    const isOpen = headerActions.classList.contains('open');
+    const isOpen = headerActionsMenu.classList.contains('open');
     if (isOpen) closeHeaderActionsMenu();
     else {
-      headerActions.classList.add('open');
-      headerActionsToggle.setAttribute('aria-expanded', 'true');
+      headerActionsMenu.classList.add('open');
+      headerActionsMenuToggle.setAttribute('aria-expanded', 'true');
     }
   });
 
