@@ -63,8 +63,8 @@ The database is available directly in this repository:
 
 | File | Description |
 |---|---|
-| [`data/TetraDENSITY_2.0_Database.csv`](data/TetraDENSITY_2.0_Database.csv) | Main density records |
-| [`data/TetraDENSITY_2.0_References.csv`](data/TetraDENSITY_2.0_References.csv) | Full bibliography |
+| [`data/TetraDENSITY_2.1_Database.csv`](data/TetraDENSITY_2.1_Database.csv) | Main density records |
+| [`data/TetraDENSITY_2.1_References.csv`](data/TetraDENSITY_2.1_References.csv) | Full bibliography |
 
 ### Key columns in the main database
 
@@ -121,7 +121,7 @@ If you use TetraDENSITY 2.0 in your work, please cite the paper above. A BibTeX 
 
 ## Contributing
 
-Spotted a missing study or an error in the data? Contributions are welcome! Please open an [issue](https://github.com/andrewzamp/TetraDENSITY/issues) or a pull request.
+Spotted a missing study or an error in the data? Contributions are welcome! Please open an [issue](https://github.com/andrewzamp/TetraDENSITY-2.0/issues/new/choose) or a pull request.
 
 ---
 
