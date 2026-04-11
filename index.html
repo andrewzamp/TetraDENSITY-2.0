@@ -1967,11 +1967,30 @@ function bindEvents() {
   });
 
   // Year range
+  function parseYearFilterInput(el) {
+    const raw = String(el.value || '').trim();
+    if (!raw) return null;
+    // While typing, ignore incomplete years (e.g. "202") to avoid premature refiltering.
+    if (!/^\d{4}$/.test(raw)) return undefined;
+    const year = parseInt(raw, 10);
+    return isNaN(year) ? null : year;
+  }
   const applyYear = debounce(() => {
-    state.filters.yearMin = parseInt(document.getElementById('f-year-min').value) || null;
-    state.filters.yearMax = parseInt(document.getElementById('f-year-max').value) || null;
-    runFilterUpdate();
-  }, 400);
+    const yminEl = document.getElementById('f-year-min');
+    const ymaxEl = document.getElementById('f-year-max');
+    const nextMin = parseYearFilterInput(yminEl);
+    const nextMax = parseYearFilterInput(ymaxEl);
+    let changed = false;
+    if (nextMin !== undefined && state.filters.yearMin !== nextMin) {
+      state.filters.yearMin = nextMin;
+      changed = true;
+    }
+    if (nextMax !== undefined && state.filters.yearMax !== nextMax) {
+      state.filters.yearMax = nextMax;
+      changed = true;
+    }
+    if (changed) runFilterUpdate();
+  }, 700);
   document.getElementById('f-year-min').addEventListener('input', applyYear);
   document.getElementById('f-year-max').addEventListener('input', applyYear);
 
