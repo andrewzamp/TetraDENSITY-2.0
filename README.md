@@ -59,7 +59,7 @@ Filter, map, and download population density records for over **3,700 tetrapod s
 
 ## Data
 
-The database is available directly in this repository:
+The latest version of the database is available directly in this repository:
 
 | File | Description |
 |---|---|
