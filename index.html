@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TetraDENSITY 2.0 – Global Database of Tetrapod Population Density Estimates</title>
+  <title>TetraDENSITY 2.0 – A Global Database of Tetrapod Population Density Estimates</title>
   <meta name="description" content="An interactive explorer for the TetraDENSITY 2.0 database of tetrapod population densities worldwide." />
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
   <meta name="author" content="Andrea Zampetti and collaborators" />
@@ -14,14 +14,14 @@
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:site_name" content="TetraDENSITY 2.0" />
-  <meta property="og:title" content="TetraDENSITY 2.0 - Global Database of Tetrapod Population Density Estimates" />
+  <meta property="og:title" content="TetraDENSITY 2.0 - A Global Database of Tetrapod Population Density Estimates" />
   <meta property="og:description" content="Official interactive explorer and publication page for TetraDENSITY 2.0, with global tetrapod population density data." />
   <meta property="og:url" content="https://andrewzamp.github.io/TetraDENSITY-2.0/" />
   <meta property="og:image" content="https://andrewzamp.github.io/TetraDENSITY-2.0/assets/TetraDENSITY_web_app.png" />
   <meta property="og:image:alt" content="TetraDENSITY 2.0 interactive web application interface" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="TetraDENSITY 2.0 - Global Database of Tetrapod Population Density Estimates" />
+  <meta name="twitter:title" content="TetraDENSITY 2.0 - A Global Database of Tetrapod Population Density Estimates" />
   <meta name="twitter:description" content="Official interactive explorer and publication page for TetraDENSITY 2.0, with global tetrapod population density data." />
   <meta name="twitter:image" content="https://andrewzamp.github.io/TetraDENSITY-2.0/assets/TetraDENSITY_web_app.png" />
 
@@ -37,7 +37,7 @@
       },
       {
         "@type": "Dataset",
-        "name": "TetraDENSITY 2.0 - Global Database of Tetrapod Population Density Estimates",
+        "name": "TetraDENSITY 2.0 - A Global Database of Tetrapod Population Density Estimates",
         "url": "https://andrewzamp.github.io/TetraDENSITY-2.0/",
         "description": "Open global database of empirical population density estimates for Amphibia, Reptilia, Aves, and Mammalia.",
         "keywords": ["tetrapod", "population density", "biodiversity", "macroecology", "database"],
@@ -136,7 +136,8 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 9999; gap: 16px;
     }
-    #loading .logo { font-size: 2rem; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+    #loading .logo { display: flex; align-items: center; justify-content: center; }
+    #loading .logo img { height: 86px; width: auto; display: block; }
     #loading .sub  { color: var(--muted); font-size: .9rem; }
     .progress-bar  { width: 260px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
     .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width .3s ease; border-radius: 2px; }
@@ -653,7 +654,7 @@
 <body>
 
 <main class="sr-only" aria-label="Publication summary">
-  <h1>TetraDENSITY 2.0: Global Database of Tetrapod Population Density Estimates</h1>
+  <h1>TetraDENSITY 2.0: A Global Database of Tetrapod Population Density Estimates</h1>
   <p>
     This is the official publication page and interactive explorer for TetraDENSITY 2.0,
     an open database of empirical population density estimates for Amphibia, Reptilia,
@@ -690,8 +691,8 @@
 
 <!-- Loading overlay -->
 <div id="loading">
-  <div class="logo">TetraDENSITY 2.0</div>
-  <div class="sub">Global Database of Tetrapod Population Density Estimates</div>
+  <div class="logo"><img id="loading-logo" data-logo-base="assets/TetraDENSITY_logo" alt="TetraDENSITY" /></div>
+  <div class="sub">A Global Database of Tetrapod Population Density Estimates</div>
   <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
   <div id="load-status">Initializing…</div>
 </div>
@@ -701,7 +702,7 @@
   <header>
     <button id="sidebar-toggle" title="Toggle filters">☰</button>
     <div class="brand"><img id="brand-logo" data-logo-base="assets/TetraDENSITY_logo" alt="TetraDENSITY" /></div>
-    <div class="tagline">Global Database of Tetrapod Population Density Estimates</div>
+    <div class="tagline">A A Global Database of Tetrapod Population Density Estimates</div>
     <button id="header-actions-toggle" class="gh-link hdr-info-btn" aria-label="Open info menu" aria-expanded="false">i</button>
     <div id="header-actions">
       <!-- What is TetraDENSITY? toggle -->
@@ -1060,29 +1061,33 @@ function fmt(n) {
   return n;
 }
 
-function initBrandLogo() {
-  const logo = document.getElementById('brand-logo');
-  if (!logo) return;
+function initLogoWithFallback(logoEl) {
+  if (!logoEl) return;
 
-  const basePath = logo.dataset.logoBase || 'assets/TetraDENSITY_logo';
+  const basePath = logoEl.dataset.logoBase || 'assets/TetraDENSITY_logo';
   const formats = ['jpeg', 'jpg', 'png', 'webp', 'svg', 'avif'];
   let idx = 0;
 
   const setLogoSrc = i => {
-    logo.src = `${basePath}.${formats[i]}`;
+    logoEl.src = `${basePath}.${formats[i]}`;
   };
 
   const tryNextFormat = () => {
     idx += 1;
     if (idx >= formats.length) {
-      logo.removeEventListener('error', tryNextFormat);
+      logoEl.removeEventListener('error', tryNextFormat);
       return;
     }
     setLogoSrc(idx);
   };
 
-  logo.addEventListener('error', tryNextFormat);
+  logoEl.addEventListener('error', tryNextFormat);
   setLogoSrc(idx);
+}
+
+function initBrandLogo() {
+  initLogoWithFallback(document.getElementById('brand-logo'));
+  initLogoWithFallback(document.getElementById('loading-logo'));
 }
 function safeParseFloat(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
 function isNewEntryRow(r) {
