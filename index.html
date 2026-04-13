@@ -1062,32 +1062,53 @@ function fmt(n) {
 }
 
 function initLogoWithFallback(logoEl) {
-  if (!logoEl) return;
+  if (!logoEl) return Promise.resolve(false);
 
   const basePath = logoEl.dataset.logoBase || 'assets/TetraDENSITY_logo';
   const formats = ['jpeg', 'jpg', 'png', 'webp', 'svg', 'avif'];
   let idx = 0;
 
-  const setLogoSrc = i => {
-    logoEl.src = `${basePath}.${formats[i]}`;
-  };
+  return new Promise(resolve => {
+    let settled = false;
 
-  const tryNextFormat = () => {
-    idx += 1;
-    if (idx >= formats.length) {
+    const done = isLoaded => {
+      if (settled) return;
+      settled = true;
+      logoEl.dataset.logoStatus = isLoaded ? 'loaded' : 'failed';
+      logoEl.removeEventListener('load', onLoad);
       logoEl.removeEventListener('error', tryNextFormat);
-      return;
-    }
-    setLogoSrc(idx);
-  };
+      resolve(isLoaded);
+    };
 
-  logoEl.addEventListener('error', tryNextFormat);
-  setLogoSrc(idx);
+    const setLogoSrc = i => {
+      logoEl.src = `${basePath}.${formats[i]}`;
+    };
+
+    const onLoad = () => done(true);
+
+    const tryNextFormat = () => {
+      idx += 1;
+      if (idx >= formats.length) {
+        done(false);
+        return;
+      }
+      setLogoSrc(idx);
+    };
+
+    logoEl.dataset.logoStatus = 'loading';
+    logoEl.addEventListener('load', onLoad);
+    logoEl.addEventListener('error', tryNextFormat);
+    setLogoSrc(idx);
+  });
 }
 
 function initBrandLogo() {
   initLogoWithFallback(document.getElementById('brand-logo'));
-  initLogoWithFallback(document.getElementById('loading-logo'));
+  return initLogoWithFallback(document.getElementById('loading-logo'));
+}
+
+function waitMs(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 function safeParseFloat(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
 function isNewEntryRow(r) {
@@ -2485,10 +2506,10 @@ function initHeaderButtons() {
 }
 
 initHeaderButtons();
-initBrandLogo();
+const loadingLogoReady = initBrandLogo();
 
 // ── Start ──────────────────────────────────────────────────────────
-loadData();
+Promise.race([loadingLogoReady, waitMs(150)]).finally(loadData);
 </script>
 </body>
 </html>
