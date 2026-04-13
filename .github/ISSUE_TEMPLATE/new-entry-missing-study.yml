@@ -22,7 +22,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Required metadata
+        ## Required fields (mandatory)
 
   - type: input
     id: species
@@ -116,7 +116,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Optional metadata from the database
+        ## Optional fields
+        Additional metadata from the database (fill only if available).
 
   - type: input
     id: class
