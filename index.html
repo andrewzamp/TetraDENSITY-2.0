@@ -1059,6 +1059,23 @@ function getReferenceString(refN) {
 function debounce(fn, ms) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
+function parseCsvUtf8(url, config) {
+  const parseConfig = { ...config };
+  delete parseConfig.download;
+  fetch(url, { cache: 'no-store' })
+    .then(resp => {
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} while loading ${url}`);
+      return resp.arrayBuffer();
+    })
+    .then(buffer => {
+      const text = new TextDecoder('utf-8').decode(buffer);
+      Papa.parse(text, parseConfig);
+    })
+    .catch(err => {
+      console.warn('UTF-8 fetch failed, falling back to Papa download:', err);
+      Papa.parse(url, { ...parseConfig, download: true });
+    });
+}
 const filterUpdateQueue = [];
 let isFilterUpdateRunning = false;
 
@@ -1120,7 +1137,7 @@ function loadData() {
   setProgress(5, 'Loading database CSV\u2026');
 
   // Load refs first (small file)
-  Papa.parse('data/TetraDENSITY_2.1_References.csv', {
+  parseCsvUtf8('data/TetraDENSITY_2.1_References.csv', {
     download: true, header: true, skipEmptyLines: true,
     complete(result) {
       console.log('References loaded:', result.data.length, 'rows');
@@ -1553,7 +1570,7 @@ function showMapInfoPanel(r, latlng) {
       ${isNewEntry && reference
         ? `<div style="margin-top:10px;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:.78rem;line-height:1.4">
              <div style="color:var(--muted);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Reference</div>
-             <div style="word-break:break-word;white-space:normal">${escHtml(reference)}</div>
+             <div style="word-break:break-word;white-space:normal">${renderClickableReferenceText(reference)}</div>
            </div>`
         : ''}
 
@@ -1940,6 +1957,26 @@ function renderReferenceMarkdown(text) {
     a.rel = 'noopener noreferrer';
   });
   return wrapper.innerHTML;
+}
+
+function renderClickableReferenceText(text) {
+  const source = String(text || '');
+  const urlPattern = /((?:https?:\/\/|www\.)[^\s<>'"\]\)]+)([.,;:!?)]*)/gi;
+  let html = '';
+  let lastIndex = 0;
+  let match;
+
+  while ((match = urlPattern.exec(source)) !== null) {
+    html += escHtml(source.slice(lastIndex, match.index));
+    const rawUrl = match[1];
+    const trailing = match[2] || '';
+    const href = rawUrl.toLowerCase().startsWith('www.') ? `https://${rawUrl}` : rawUrl;
+    html += `<a href="${escHtml(href)}" target="_blank" rel="noopener noreferrer">${escHtml(rawUrl)}</a>${escHtml(trailing)}`;
+    lastIndex = match.index + match[0].length;
+  }
+
+  html += escHtml(source.slice(lastIndex));
+  return html;
 }
 
 function renderPagination(totalRows, totalPages) {
