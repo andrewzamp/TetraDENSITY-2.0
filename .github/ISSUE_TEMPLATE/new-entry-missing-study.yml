@@ -1,5 +1,5 @@
 name: New entry / missing study
-description: Suggest a new study or records to be added to TetraDENSITY 2.0.
+description: Submit a new record or study to TetraDENSITY 2.0 using structured metadata fields.
 title: "[New entry]: "
 labels:
   - data
@@ -8,76 +8,213 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this form to suggest **new records/studies not currently in the database**.
-        For corrections to existing records, use the **Data correction** template.
+        Use this form to submit a new record or study that is not already in the database.
+        Fill the required fields first. For optional fields, enter the available metadata or leave blank if unknown.
 
   - type: checkboxes
     id: checks
     attributes:
       label: Before submitting
       options:
-        - label: I searched existing issues and did not find this same study/request.
-          required: true
-        - label: I confirmed this is not already present in the current database files/web app.
+        - label: I confirmed this is not already present in the current database files or web app.
           required: true
 
-  - type: dropdown
-    id: contribution_type
+  - type: markdown
     attributes:
-      label: Contribution type
-      options:
-        - Single missing record
-        - Multiple records from one study
-        - Multiple studies / bulk contribution
-    validations:
-      required: true
+      value: |
+        Required metadata
 
   - type: input
     id: species
     attributes:
-      label: Species (or taxa) covered
-      placeholder: e.g., Panthera leo; or multiple species
+      label: Species
+      placeholder: e.g., *Canis lupus*
     validations:
       required: true
 
   - type: input
-    id: citation
+    id: site
     attributes:
-      label: Study citation
-      placeholder: Full citation or DOI
+      label: Site
+      placeholder: e.g., reserve, island, park, or locality name
     validations:
       required: true
 
   - type: input
-    id: publication_link
+    id: country
     attributes:
-      label: Link to source
-      placeholder: DOI URL, journal page, repository link, etc.
+      label: Country
+      placeholder: e.g., Italy
+    validations:
+      required: true
+
+  - type: input
+    id: year
+    attributes:
+      label: Year(s)
+      placeholder: e.g., 2026 or 2023-2026
+    validations:
+      required: true
+
+  - type: input
+    id: month_season
+    attributes:
+      label: Month(s) / Season
+      placeholder: e.g., May-July, Summer
+    validations:
+      required: true
+
+  - type: input
+    id: longitude
+    attributes:
+      label: Longitude (in decimal degrees)
+      placeholder: e.g., -42.916
+    validations:
+      required: true
+
+  - type: input
+    id: latitude
+    attributes:
+      label: Latitude (in decimal degrees)
+      placeholder: e.g., -22.483
+    validations:
+      required: true
+
+  - type: input
+    id: density
+    attributes:
+      label: Density
+      placeholder: e.g., 10.5
+    validations:
+      required: true
+
+  - type: input
+    id: density_unit
+    attributes:
+      label: Density unit
+      placeholder: e.g., ind/km², ind/ha, pairs/km²
+    validations:
+      required: true
+
+  - type: input
+    id: method
+    attributes:
+      label: Method
+      placeholder: e.g., Census, Encounter_Models, Mark_Recapture,...
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Include any important context, assumptions, or caveats.
+      placeholder: 
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        Optional metadata from the database
+
+  - type: input
+    id: class
+    attributes:
+      label: Class
+      placeholder: e.g., Mammalia
+    validations:
+      required: false
+
+  - type: input
+    id: order
+    attributes:
+      label: Order
+      placeholder: e.g., Carnivora
+    validations:
+      required: false
+
+  - type: input
+    id: family
+    attributes:
+      label: Family
+      placeholder: e.g., Canidae
+    validations:
+      required: false
+
+  - type: input
+    id: sampling_area
+    attributes:
+      label: Extent of sampling area
+      placeholder: e.g., 10 km²
+    validations:
+      required: false
+
+  - type: input
+    id: se
+    attributes:
+      label: Standard Error
+      placeholder: Standard error of the estimate, if applicable
+    validations:
+      required: false
+
+  - type: input
+    id: sd
+    attributes:
+      label: Standard Deviation
+      placeholder: Standard deviation of the estimate, if applicable
+    validations:
+      required: false
+
+  - type: input
+    id: ci90
+    attributes:
+      label: 90% Confidence Interval
+      placeholder: 90% confidence interval, if applicable
+    validations:
+      required: false
+
+  - type: input
+    id: ci95
+    attributes:
+      label: 95% Confidence Interval
+      placeholder: 95% confidence interval, if applicable
+    validations:
+      required: false
+
+  - type: input
+    id: cv
+    attributes:
+      label: Coefficient of Variation
+      placeholder: Coefficient of variation, if applicable
+    validations:
+      required: false
+
+  - type: input
+    id: method2
+    attributes:
+      label: Method2
+      placeholder: Secondary method or methodological detail
     validations:
       required: false
 
   - type: textarea
-    id: suggested_records
+    id: notes_method
     attributes:
-      label: Summary of records to add
-      description: Briefly describe what should be added and key fields available.
-      placeholder: Include class/order/family, year(s), country/site, method, density, unit.
+      label: Notes method
+      description: Additional methodological notes 
+      placeholder: e.g., plot size, number of camera-traps, survey effort,...
     validations:
-      required: true
+      required: false
 
-  - type: textarea
-    id: data_availability
+  - type: dropdown
+    id: native
     attributes:
-      label: Data availability
-      description: Share whether the data are public and how maintainers can access/verify them.
-      placeholder: Public table in paper, supplementary file, repository dataset, etc.
-    validations:
-      required: true
-
-  - type: textarea
-    id: quality_notes
-    attributes:
-      label: Notes on methods/quality (optional)
-      placeholder: Anything important about sampling design, uncertainty, conversions, exclusions.
+      label: Native
+      description: Whether the species is native to the site.
+      options:
+        - TRUE
+        - FALSE
+        - NA / unknown
     validations:
       required: false
