@@ -1,10 +1,10 @@
 <div align="center">
 
-# TetraDENSITY 2.0
+# TetraDENSITY
 
 ### A Global Database of Tetrapod Population Density Estimates
 
-[![Explore the Database](https://img.shields.io/badge/🌍%20Explore%20the%20Database-Live%20App-2dd4c8?style=for-the-badge)](https://andrewzamp.github.io/TetraDENSITY-2.0/)
+[![Explore the Database](https://img.shields.io/badge/🌍%20Explore%20the%20Database-Live%20App-2dd4c8?style=for-the-badge)](https://andrewzamp.github.io/TetraDENSITY/)
 [![Read the Paper](https://img.shields.io/badge/📄%20Read%20the%20Paper-GEB%202024-f0913a?style=for-the-badge)](https://doi.org/10.1111/geb.13929)
 
 </div>
@@ -13,7 +13,7 @@
 
 ## 🌍 Explore the interactive database
 
-> **👉 [TetraDENSITY 2.0 web app](https://andrewzamp.github.io/TetraDENSITY-2.0/)**
+> **👉 [TetraDENSITY web app](https://andrewzamp.github.io/TetraDENSITY/)**
 
 Filter, map, and download population density records for over **3,700 tetrapod species** across the globe. No installation required, straight in your browser.
 
@@ -63,8 +63,8 @@ The database is available directly in this repository:
 
 | File | Description |
 |---|---|
-| [`data/TetraDENSITY_2.1_Database.csv`](data/TetraDENSITY_2.1_Database.csv) | Main density records |
-| [`data/TetraDENSITY_2.1_References.csv`](data/TetraDENSITY_2.1_References.csv) | Full bibliography |
+| [`data/TetraDENSITY_v2.2_Database.csv`](data/TetraDENSITY_2.1_Database.csv) | Main density records |
+| [`data/TetraDENSITY_v2.2_References.csv`](data/TetraDENSITY_2.1_References.csv) | Full bibliography |
 
 ### Key columns in the main database
 
@@ -87,11 +87,11 @@ The database is available directly in this repository:
 ## How to use
 
 ### In the browser
-Open the **[TetraDENSITY 2.0 web app](https://andrewzamp.github.io/TetraDENSITY-2.0/)**, filter by taxonomy, period, or estimation method, explore the interactive map and charts, then download your filtered subset as a CSV.
+Open the **[TetraDENSITY web app](https://andrewzamp.github.io/TetraDENSITY/)**, filter by taxonomy, period, or estimation method, explore the interactive map and charts, then download your filtered subset as a CSV.
 
 ## The paper
 
-TetraDENSITY 2.0 is described in full in:
+The latest published version of TetraDENSITY is described in full in:
 
 > **Santini, L., Mendez Angarita, V. Y., Karoulis, C., Fundarò, D., Pranzini, N., Vivaldi, C., Zhang, T., Zampetti,. A., Gargano, S. J., Mirante, D., & Paltrinieri, L. (2024).** TetraDENSITY 2.0—A database of population density estimates in TetraPods. *Global Ecology and Biogeography, 33*(12). [https://doi.org/10.1111/geb.13929](https://doi.org/10.1111/geb.13929)
 
@@ -99,7 +99,7 @@ TetraDENSITY 2.0 is described in full in:
 
 ## Citation
 
-If you use TetraDENSITY 2.0 in your work, please cite the paper above. A BibTeX entry is provided below for convenience:
+If you use TetraDENSITY in your work, please cite the paper above. A BibTeX entry is provided below for convenience:
 
 ```bibtex
 @article{Santini2024,
