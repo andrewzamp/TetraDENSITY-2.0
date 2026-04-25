@@ -124,15 +124,15 @@
         "distribution": [
           {
             "@type": "DataDownload",
-            "contentUrl": "https://andrewzamp.github.io/TetraDENSITY/data/TetraDENSITY_v2.2_Database.csv",
+            "contentUrl": "https://andrewzamp.github.io/TetraDENSITY/data/TetraDENSITY_v2.3_Database.csv",
             "encodingFormat": "text/csv",
-            "name": "TetraDENSITY 2.2 Database CSV"
+            "name": "TetraDENSITY 2.3 Database CSV"
           },
           {
             "@type": "DataDownload",
-            "contentUrl": "https://andrewzamp.github.io/TetraDENSITY/data/TetraDENSITY_v2.2_References.csv",
+            "contentUrl": "https://andrewzamp.github.io/TetraDENSITY/data/TetraDENSITY_v2.3_References.csv",
             "encodingFormat": "text/csv",
-            "name": "TetraDENSITY 2.2 References CSV"
+            "name": "TetraDENSITY 2.3 References CSV"
           }
         ]
       },
@@ -774,8 +774,8 @@
   </p>
   <p>
     Data downloads:
-    https://andrewzamp.github.io/TetraDENSITY/data/TetraDENSITY_v2.2_Database.csv and
-    https://andrewzamp.github.io/TetraDENSITY/data/TetraDENSITY_v2.2_References.csv
+    https://andrewzamp.github.io/TetraDENSITY/data/TetraDENSITY_v2.3_Database.csv and
+    https://andrewzamp.github.io/TetraDENSITY/data/TetraDENSITY_v2.3_References.csv
   </p>
 </main>
 
@@ -790,8 +790,8 @@
     </p>
     <p style="line-height:1.5;">
       Download data directly:
-      <a href="data/TetraDENSITY_v2.2_Database.csv">Database CSV</a> |
-      <a href="data/TetraDENSITY_v2.2_References.csv">References CSV</a>
+      <a href="data/TetraDENSITY_v2.3_Database.csv">Database CSV</a> |
+      <a href="data/TetraDENSITY_v2.3_References.csv">References CSV</a>
     </p>
   </section>
 </noscript>
@@ -1324,7 +1324,7 @@ function loadData() {
   setProgress(5, 'Loading database CSV\u2026');
 
   // Load refs first (small file)
-  parseCsvUtf8('data/TetraDENSITY_v2.2_References.csv', {
+  parseCsvUtf8('data/TetraDENSITY_v2.3_References.csv', {
     download: true, header: true, skipEmptyLines: true,
     complete(result) {
       console.log('References loaded:', result.data.length, 'rows');
@@ -1347,7 +1347,7 @@ function loadData() {
   });
 
   // Load main database (large file)
-  Papa.parse('data/TetraDENSITY_v2.2_Database.csv', {
+  Papa.parse('data/TetraDENSITY_v2.3_Database.csv', {
     download: true, header: true, skipEmptyLines: true,
     step(result, parser) {
       // progress estimation based on bytes not available; approximate by rows
