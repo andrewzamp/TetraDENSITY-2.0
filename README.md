@@ -63,8 +63,8 @@ The latest version of the database is available directly in this repository:
 
 | File | Description |
 |---|---|
-| [`data/TetraDENSITY_v2.2_Database.csv`](data/TetraDENSITY_v2.2_Database.csv) | Main density records |
-| [`data/TetraDENSITY_v2.2_References.csv`](data/TetraDENSITY_v2.2_References.csv) | Full bibliography |
+| [`data/TetraDENSITY_v2.4_Database.csv`](data/TetraDENSITY_v2.4_Database.csv) | Main density records |
+| [`data/TetraDENSITY_v2.4_References.csv`](data/TetraDENSITY_v2.4_References.csv) | Full bibliography |
 
 ### Key columns in the main database
 
